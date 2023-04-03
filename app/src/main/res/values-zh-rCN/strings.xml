@@ -549,6 +549,11 @@
     <string name="text_editor_reload_message">您确定要重新加载吗？对此文档未保存的变更将丢失。</string>
     <string name="text_editor_encoding">编码</string>
     <string name="text_editor_close_message">您确定要舍弃对此文档未保存的变更吗？</string>
+    
+    <string name="word_warp">文字换行</string>
+    <string name="syntax_highlighting">语法高亮</string>
+    <string name="undo">撤消</string>
+    <string name="redo">重做</string> 
 
     <string name="ftp_server_title">FTP 服务器</string>
     <string name="ftp_server_state_title">状态</string>
