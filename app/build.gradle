@@ -31,7 +31,7 @@ android {
     buildToolsVersion = '34.0.0'
     defaultConfig {
         applicationId 'me.zhanghai.android.files'
-        minSdk 21
+        minSdk 26
         // Not supporting notification runtime permission yet.
         //noinspection OldTargetApi
         targetSdk 32
@@ -118,7 +118,7 @@ dependencies {
     implementation 'androidx.activity:activity-ktx:1.7.2'
     // Appcompat 1.7.0-alpha01 is required for properly changing locale below API 24 (b/243119645).
     implementation 'androidx.appcompat:appcompat:1.7.0-alpha03'
-    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.core:core-ktx:1.12.0-rc01'
     implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
     implementation 'androidx.exifinterface:exifinterface:1.3.6'
     implementation 'androidx.fragment:fragment-ktx:1.6.1'
