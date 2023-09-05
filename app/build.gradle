@@ -103,7 +103,7 @@ repositories {
 dependencies {
     implementation 'com.github.chrisbanes:PhotoView:2.3.0'
     releaseImplementation 'com.github.mypplication:stetho-noop:1.1'
-    implementation 'com.github.topjohnwu.libsu:service:5.2.0'
+    implementation 'com.github.topjohnwu.libsu:service:5.2.1'
 }
 
 dependencies {
@@ -218,7 +218,7 @@ dependencies {
 
     //https://github.com/Rosemoe/sora-editor
     // Better text editor
-    implementation(platform("io.github.Rosemoe.sora-editor:bom:0.22.0"))
+    implementation(platform("io.github.Rosemoe.sora-editor:bom:0.22.1"))
     implementation("io.github.Rosemoe.sora-editor:editor")
     implementation("io.github.Rosemoe.sora-editor:language-java")
 
