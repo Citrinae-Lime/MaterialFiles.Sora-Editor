@@ -6,7 +6,7 @@
 
 [下载 APK](https://github.com/Citrinae-Lime/MaterialFiles-CI_Build/releases/latest/download/app-release.apk)
 
-[在 Transifex 上帮助翻译](https://www.transifex.com/zhanghai/MaterialFiles/)（[搜索 Android 和 GNOME 的翻译](https://translations.zhanghai.me/)、[搜索微软的翻译](https://www.microsoft.com/en-us/language)、[MIME 类型翻译](https://github.com/freedesktop/xdg-shared-mime-info/tree/master/po)）
+[在 Transifex 上帮助翻译](https://www.transifex.com/zhanghai/MaterialFiles/)（[搜索 Android 和 GNOME 的翻译](https://translations.zhanghai.me/)、[搜索微软的翻译](https://www.microsoft.com/en-us/language)、[MIME 类型翻译](https://gitlab.freedesktop.org/xdg/shared-mime-info/-/tree/master/po)）
 
 ## 预览
 
