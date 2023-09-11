@@ -36,7 +36,7 @@ android {
         //noinspection OldTargetApi
         targetSdk 34
         versionCode 34
-        versionName '1.6.2'
+        versionName '1.6.2.Sora-Editor'
         resValue 'string', 'app_version', versionName + ' (' + versionCode + ')'
         buildConfigField 'String', 'FILE_PROVIDIER_AUTHORITY', 'APPLICATION_ID + ".file_provider"'
         resValue 'string', 'app_provider_authority', applicationId + '.app_provider'
