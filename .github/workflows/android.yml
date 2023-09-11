@@ -13,6 +13,11 @@ jobs:
       with:
         submodules: true
 
+    - name: Remove NONFREE
+      run: |
+        rm -rf app/src/main/java/me/zhanghai/android/files/nonfree
+        find -type f -exec sed -i '/\/\/#ifdef NONFREE/,/\/\/#endif/d' {} +
+
     - name: Setup Gradle
       uses: gradle/gradle-build-action@v2
       with:
