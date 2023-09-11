@@ -31,7 +31,7 @@ android {
     ndkVersion '26.0.10792818'
     defaultConfig {
         applicationId 'me.zhanghai.android.files'
-        minSdk 21
+        minSdk 26
         // Not supporting notification runtime permission yet.
         //noinspection OldTargetApi
         targetSdk 34
@@ -165,9 +165,7 @@ dependencies {
     // com.google.guava:listenablefuture:1.0 pulled in by AndroidX Core
     implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
     implementation 'com.takisoft.preferencex:preferencex:1.1.0'
-    // Commons Net 3.9.0 started using java.time.Duration in FTPClient.
-    //noinspection GradleDependency
-    implementation 'commons-net:commons-net:3.8.0'
+    implementation 'commons-net:commons-net:3.9.0'
     // LicensesDialog 2.2.0 pulls in androidx.webkit and uses setForceDark() instead of correctly
     // setting colors.
     //noinspection GradleDependency

@@ -33,7 +33,7 @@ object LibSuFileServiceLauncher {
     private val lock = Any()
 
     init {
-        Shell.enableVerboseLogging = true
+        Shell.enableVerboseLogging = BuildConfig.DEBUG
         Shell.setDefaultBuilder(
             Shell.Builder.create()
                 .setInitializers(LibSuShellInitializer::class.java)
