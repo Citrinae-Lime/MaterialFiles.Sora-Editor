@@ -37,13 +37,14 @@ private val extensionToMimeTypeOverrideMap = mapOf(
     // Addition
     "bz" to "application/x-bzip",
     "bz2" to "application/x-bzip2",
+    "zipx" to "application/zip",
     "z" to "application/x-compress",
     "lzma" to "application/x-lzma",
     "p7b" to "application/x-pkcs7-certificates",
     "spc" to "application/x-pkcs7-certificates", // Clashes with "chemical/x-galactic-spc"
     "p7c" to "application/pkcs7-mime",
     "p7s" to "application/pkcs7-signature",
-    "ts" to "application/typescript", // Clashes with "video/mp2ts"
+    // "ts" to "application/typescript", // Clashes with "video/mp2ts"
     "py3" to "text/x-python",
     "py3x" to "text/x-python",
     "pyx" to "text/x-python",
@@ -63,7 +64,12 @@ private val extensionToMimeTypeOverrideMap = mapOf(
     "log" to "text/plain",
     "prop" to "text/plain",
     "properties" to "text/plain",
-    "rc" to "text/plain"
+    "rc" to "text/plain",
+    "mtz" to "application/x-mtz",
+    "mpc" to "audio/x-musepack", // Clashes with "chemical/x-mopac-input"
+    "wv" to "audio/x-wavpack",
+    "wvc" to "audio/x-wavpack-correction",
+    "ass" to "text/x-ssa"
 ).mapValues { it.value.asMimeType() }
 
 fun MimeType.Companion.forSpecialPosixFileType(type: PosixFileType): MimeType? =
