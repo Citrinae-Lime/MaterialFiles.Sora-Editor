@@ -37,7 +37,8 @@ private val supportedArchiveMimeTypes = mutableListOf(
     "application/x-redhat-package-manager",
     "application/x-tar",
     "application/x-ustar",
-    "application/x-xz"
+    "application/x-xz",
+    "application/x-mtz"
 ).map { it.asMimeType() }.toSet()
 
 val MimeType.isImage: Boolean
