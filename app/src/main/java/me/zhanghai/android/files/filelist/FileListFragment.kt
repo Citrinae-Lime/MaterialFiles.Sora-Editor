@@ -916,6 +916,10 @@ class FileListFragment : Fragment(), BreadcrumbLayout.Listener, FileListAdapter.
                 selectAllFiles()
                 true
             }
+            R.id.action_select_range -> {
+                rangeSelectFiles()
+                true
+            }
             else -> false
         }
 
@@ -967,6 +971,10 @@ class FileListFragment : Fragment(), BreadcrumbLayout.Listener, FileListAdapter.
 
     private fun selectAllFiles() {
         adapter.selectAllFiles()
+    }
+
+    private fun rangeSelectFiles() {
+        adapter.rangeSelectFiles()
     }
 
     private fun onPasteStateChanged(pasteState: PasteState) {
