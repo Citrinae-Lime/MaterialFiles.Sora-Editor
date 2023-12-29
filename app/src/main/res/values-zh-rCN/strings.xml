@@ -39,6 +39,7 @@
     <string name="search">搜索</string>
     <string name="select">选择</string>
     <string name="select_all">全选</string>
+    <string name="select_range">区间选择</string>
     <string name="share">分享</string>
     <string name="show">显示</string>
     <string name="skip">跳过</string>
