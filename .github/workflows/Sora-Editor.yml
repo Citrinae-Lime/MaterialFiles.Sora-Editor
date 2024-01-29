@@ -1,0 +1,65 @@
+name: MaterialFiles with Sora-Editor
+
+on: [workflow_dispatch, push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+          show-progress: false
+
+      - name: Get "latest" tag and short SHA
+        id: get_tag
+        run: |
+          tag=`curl -s 'https://api.github.com/repos/zhanghai/MaterialFiles/tags?per_page=1' | grep -Po '"name": "\K[^"]+'` && echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo Short_SHA=$(git rev-parse --short "$GITHUB_SHA") >> $GITHUB_OUTPUT
+
+      - name: Delete Non-Free Code
+        run: |
+          rm -rf app/src/main/java/me/zhanghai/android/files/nonfree
+          find -type f -exec sed -i '/\/\/#ifdef NONFREE/,/\/\/#endif/d' {} +
+
+      - name: Write Signing Configuration
+        if: github.event_name != 'pull_request'
+        run: |
+          if [ ! -z "${{ secrets.KEY_STORE }}" ]; then
+            echo storePassword='${{ secrets.KEY_STORE_PASSWORD }}' >> signing.properties
+            echo keyAlias='${{ secrets.ALIAS }}' >> signing.properties
+            echo keyPassword='${{ secrets.KEY_STORE_PASSWORD }}' >> signing.properties
+            echo storeFile='key.jks' >> signing.properties
+            echo ${{ secrets.KEY_STORE }} | base64 --decode > key.jks
+          fi
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: current
+
+      - name: Build with Gradle
+        run: gradle makeApkFromBundleForRelease assembleRelease --parallel
+
+      - name: Rename artifact
+        working-directory: app/build/
+        run: |
+          mv outputs/apk/release/app-release.apk outputs/apk/release/MaterialFiles.Sora-Editor-${{steps.get_tag.outputs.tag}}@${{steps.get_tag.outputs.Short_SHA}}.Universal.apk
+          mv intermediates/apks_from_bundle/release/makeApkFromBundleForRelease/bundle.apks outputs/apk/release/MaterialFiles.Sora-Editor-${{steps.get_tag.outputs.tag}}@${{steps.get_tag.outputs.Short_SHA}}.apks
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: MaterialFiles-release ${{steps.get_tag.outputs.tag}}@${{steps.get_tag.outputs.Short_SHA}}
+          path: app/build/outputs/apk/release/
+          retention-days: 28
+
+      #Todo: Upload to release
