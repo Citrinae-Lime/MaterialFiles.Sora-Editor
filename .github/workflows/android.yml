@@ -1,6 +1,9 @@
 name: Android CI
 
-on: [push]
+on: 
+  workflow_dispatch:
+  watch:
+    types: started
 
 jobs:
   build:
@@ -9,19 +12,48 @@ jobs:
 
     steps:
     - name: Check out repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
+        ref: 'master'
         submodules: true
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
+        show-progress: false
+        repository: 'zhanghai/MaterialFiles'
+
+    - name: Fetch Repository Commit Details
+      id: GetCommit
+      run: |
+        Count=`curl -I -k "https://api.github.com/repos/zhanghai/MaterialFiles/commits?per_page=1" | sed -n '/^[Ll]ink:/ s/.*"next".*page=\([0-9]*\).*"last".*/\1/p'`
+        echo "Count=$Count" >> $GITHUB_OUTPUT
+        # echo Short_SHA=$(git rev-parse --short "$GITHUB_SHA") >> $GITHUB_OUTPUT
+
+    - name: Update Build Configuration
+      run: |
+        sed -i "/resValue 'string', 'app_version'/i\        versionNameSuffix '.β.${{steps.GetCommit.outputs.commitCount}}'" app/build.gradle
+        sed -i "s/signingConfig signingConfigs.release/signingConfig signingConfigs.debug/" app/build.gradle
+        # sed -i "s/        versionCode [0-9]*/        versionCode ${{steps.GetCommit.outputs.commitCount}}/" app/build.gradle
+    #Todo: Use commit count as version code
+
+    - name: Delete Non-Free Software Code
+      run: |
+        rm -rf app/src/main/java/me/zhanghai/android/files/nonfree
+        find -type f -exec sed -i '/\/\/#ifdef NONFREE/,/\/\/#endif/d' {} +
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '21'
+
     - name: Build with Gradle
-      run: ./gradlew assembleDebug lintVitalRelease
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: gradle/actions/setup-gradle@v3
       with:
-        name: app-debug.apk
-        path: app/build/outputs/apk/debug/app-debug.apk
-        retention-days: 10
+        gradle-home-cache-cleanup: true
+        gradle-version: release-candidate
+        arguments: build
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-output（${{steps.GetCommit.outputs.commitCount}}）
+        path: app/build/outputs/apk/
+        retention-days: 7

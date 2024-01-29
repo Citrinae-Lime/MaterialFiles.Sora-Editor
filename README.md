@@ -1,17 +1,20 @@
 # Material Files
 
 [![Android CI 状态](https://img.shields.io/github/actions/workflow/status/Citrinae-Lime/MaterialFiles.Sora-Editor/android.yml?style=for-the-badge&label=%E5%8E%9F%E7%89%88%20%E7%8A%B6%E6%80%81)](https://github.com/Citrinae-Lime/MaterialFiles.Sora-Editor/actions/workflows/android.yml)
-[![Sora-Editor版 状态](https://img.shields.io/github/actions/workflow/status/Citrinae-Lime/MaterialFiles.Sora-Editor/Sora-Editor.yml?style=for-the-badge&cacheSeconds=36000&label=Sora-Editor%E7%89%88%20%E7%8A%B6%E6%80%81)](https://github.com/Citrinae-Lime/MaterialFiles.Sora-Editor/actions/workflows/Sora-Editor.yml)
+[![Sora-Editor版 状态](https://img.shields.io/github/actions/workflow/status/Citrinae-Lime/MaterialFiles.Sora-Editor/Sora-Editor.yml?style=for-the-badge&label=Sora-Editor%E7%89%88%20%E7%8A%B6%E6%80%81)](https://github.com/Citrinae-Lime/MaterialFiles.Sora-Editor/actions/workflows/Sora-Editor.yml)
 [![GitHub 发行版](https://img.shields.io/github/v/release/Citrinae-Lime/MaterialFiles.Sora-Editor?include_prereleases&display_name=release&style=for-the-badge)](https://github.com/Citrinae-Lime/MaterialFiles.Sora-Editor/releases)
 [![许可证](https://img.shields.io/github/license/zhanghai/MaterialFiles?color=blue&style=for-the-badge)](LICENSE)
 
 一个开源的 Material Design 文件管理器，适用于 Android 8.0+。
 
-[下载原版 APK](https://github.com/zhanghai/MaterialFiles/releases/latest/download/app-release.apk)
-
 [<img alt="下载应用，请到 GitHub" src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" width="240">](https://github.com/Citrinae-Lime/MaterialFiles.Sora-Editor/releases/latest/)
 
 [在 Transifex 上帮助翻译](https://www.transifex.com/zhanghai/MaterialFiles/)（[搜索 Android 和 GNOME 的翻译](https://translations.zhanghai.me/)、[微软语言资源](https://learn.microsoft.com/en-us/globalization/reference/microsoft-language-resources)、[MIME 类型翻译](https://gitlab.freedesktop.org/xdg/shared-mime-info/-/tree/master/po)）
+
+### 构建原版
+点击星标即可用 action 从上游代码构建一个移除了 Firebase 的 release/debug 变体。
+
+[也可以下载原版正式 APK](https://github.com/zhanghai/MaterialFiles/releases/latest/download/app-release.apk)
 
 ## 预览
 
