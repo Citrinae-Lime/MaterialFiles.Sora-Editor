@@ -13,6 +13,11 @@
 
 [在 Transifex 上帮助翻译](https://www.transifex.com/zhanghai/MaterialFiles/)（[搜索 Android 和 GNOME 的翻译](https://translations.zhanghai.me/)、[微软语言资源](https://learn.microsoft.com/en-us/globalization/reference/microsoft-language-resources)、[MIME 类型翻译](https://gitlab.freedesktop.org/xdg/shared-mime-info/-/tree/master/po)）
 
+<details>
+<summary>构建原版</summary>
+点击星标即可从上游代码构建一个移除了 Firebase 的 release/debug 变体。
+</details>
+
 ## 预览
 
 <p><img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="32%" /> <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="32%" /> <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" width="32%" />
