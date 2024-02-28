@@ -28,9 +28,9 @@ jobs:
 
     - name: Update Build Configuration
       run: |
-        sed -i "/resValue 'string', 'app_version'/i\        versionNameSuffix '.β'" app/build.gradle
+        sed -i "/resValue 'string', 'app_version'/i\        versionNameSuffix '.β.${{steps.GetCommit.outputs.commitCount}}'" app/build.gradle
         sed -i "s/signingConfig signingConfigs.release/signingConfig signingConfigs.debug/" app/build.gradle
-        sed -i "s/        versionCode [0-9]*/        versionCode ${{steps.GetCommit.outputs.commitCount}}/" app/build.gradle
+        # sed -i "s/        versionCode [0-9]*/        versionCode ${{steps.GetCommit.outputs.commitCount}}/" app/build.gradle
 
     - name: Delete Non-Free Software Code
       run: |

@@ -36,17 +36,17 @@ jobs:
       with:
         gradle-home-cache-cleanup: true
         gradle-version: current
-        arguments: assembleRelease lintVitalRelease
+        arguments: assembleDebug lintVitalRelease
 
-    - name: Rename artifact
-      working-directory: app/build/outputs/apk/release/
-      run: mv app-release.apk MaterialFiles.Sora-Editor-${{steps.get_tag.outputs.tag}}@${{steps.get_tag.outputs.Short_SHA}}.apk
+    # - name: Rename artifact
+    #   working-directory: app/build/outputs/apk/release/
+    #   run: mv app-release.apk MaterialFiles.Sora-Editor-${{steps.get_tag.outputs.tag}}@${{steps.get_tag.outputs.Short_SHA}}.apk
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: app-release ${{steps.get_tag.outputs.tag}}@${{steps.get_tag.outputs.Short_SHA}}
-        path: app/build/outputs/apk/release/
-        retention-days: 30
+        path: app/build/outputs/
+        retention-days: 3
 
     #Todo: Upload to relase
