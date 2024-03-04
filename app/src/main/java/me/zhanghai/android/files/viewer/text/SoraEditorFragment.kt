@@ -9,6 +9,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
@@ -30,6 +31,7 @@ import me.zhanghai.android.files.databinding.SoraEditorFragmentBinding
 import me.zhanghai.android.files.filejob.FileJobService
 import me.zhanghai.android.files.theme.night.NightModeHelper
 import me.zhanghai.android.files.util.ParcelableArgs
+import me.zhanghai.android.files.util.addOnBackPressedCallback
 import me.zhanghai.android.files.util.args
 import me.zhanghai.android.files.util.extraPath
 import me.zhanghai.android.files.util.showToast
@@ -44,11 +46,25 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     private lateinit var binding: SoraEditorFragmentBinding
     private lateinit var codeEditor: CodeEditor
 
+    private lateinit var onBackPressedCallback: OnBackPressedCallback
+
     private var fileContents: String? = null
     private var errorMessage: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        lifecycleScope.launchWhenStarted {
+            onBackPressedCallback = object : OnBackPressedCallback(false) {
+                override fun handleOnBackPressed() {
+                    ConfirmCloseDialogFragment.show(this@SoraEditorFragment)
+                }
+            }
+            launch {
+                onBackPressedCallback.isEnabled = textChanged()
+            }
+            addOnBackPressedCallback(onBackPressedCallback)
+        }
 
         val argsFile = args.intent.extraPath
         if (argsFile == null) {
@@ -154,9 +170,9 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     }
 
 
-    fun onFinish(): Boolean {
-        if (textChanged()) {
-            ConfirmCloseDialogFragment.show(this)
+    fun onSupportNavigateUp(): Boolean {
+        if (onBackPressedCallback.isEnabled) {
+            onBackPressedCallback.handleOnBackPressed()
             return true
         }
         return false
