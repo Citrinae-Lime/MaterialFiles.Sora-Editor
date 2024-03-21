@@ -41,6 +41,7 @@ android {
         buildConfigField 'String', 'FILE_PROVIDIER_AUTHORITY', 'APPLICATION_ID + ".file_provider"'
         resValue 'string', 'app_provider_authority', applicationId + '.app_provider'
         resValue 'string', 'file_provider_authority', applicationId + '.file_provider'
+        versionNameSuffix '.Sora-Editor'
         externalNativeBuild {
             cmake {
                 arguments '-DANDROID_STL=none'
