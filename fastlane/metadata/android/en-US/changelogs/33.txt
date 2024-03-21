@@ -2,3 +2,5 @@
 - Fixed root access not working on some OnePlus devices.
 - Fixed number of grid view columns on landscape tablet.
 - Other bug fixes and improvements.
+
+- Use Sora-Editor as Text Editor.
