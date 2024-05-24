@@ -173,7 +173,7 @@ dependencies {
     implementation 'com.takisoft.preferencex:preferencex:1.1.0'
     // Commons Net 3.9.0 started using java.time.Duration in FTPClient.
     //noinspection GradleDependency
-    implementation 'commons-net:commons-net:3.10.0'
+    implementation 'commons-net:commons-net:3.11.1'
     // LicensesDialog 2.2.0 pulls in androidx.webkit and uses setForceDark() instead of correctly
     // setting colors.
     //noinspection GradleDependency
@@ -217,7 +217,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics-ndk'
 //#endif
 
-    //https://github.com/Rosemoe/sora-editor
+    // https://github.com/Rosemoe/sora-editor
     // Better text editor
     implementation platform('io.github.Rosemoe.sora-editor:bom:0.23.4')
     implementation 'io.github.Rosemoe.sora-editor:editor'

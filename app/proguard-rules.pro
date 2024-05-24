@@ -43,6 +43,9 @@
     public <init>(java.util.concurrent.Executor);
     public <init>();
 }
+-keep class org.apache.mina.filter.ssl.SslFilter {
+    public <init>(javax.net.ssl.SSLContext);
+}
 
 # Bouncy Castle
 -keep class org.bouncycastle.jcajce.provider.** { *; }
