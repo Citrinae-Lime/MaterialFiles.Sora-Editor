@@ -100,6 +100,13 @@ class FileListAdapter(
             notifyItemRangeChanged(0, itemCount, PAYLOAD_STATE_CHANGED)
         }
 
+    private var _denseLayout: Boolean = false
+    var denseLayout: Boolean
+        get() = _denseLayout
+        set(value) {
+            _denseLayout = value
+        }
+
     fun replaceSelectedFiles(files: FileItemSet) {
         val changedFiles = fileItemSetOf()
         val iterator = selectedFiles.iterator()
@@ -237,6 +244,11 @@ class FileListAdapter(
                     CheckableItemBackground.create(4f, 12f, context)
                 } else {
                     CheckableItemBackground.create(0f, 0f, context)
+                }
+                if (viewType == FileViewType.LIST && denseLayout) {
+                    layoutParams = layoutParams.apply {
+                        height = context.resources.getDimensionPixelSize(R.dimen.dense_two_line_list_item_height)
+                    }
                 }
             }
             thumbnailOutlineView?.apply {

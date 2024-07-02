@@ -606,6 +606,7 @@
     </string-array>
     <string name="settings_black_night_mode">黑色夜间模式</string>
     <string name="settings_file_list_animation_title">文件列表动画</string>
+    <string name="settings_file_list_dense_layout_title">紧凑文件列表</string>
     <string name="settings_file_name_ellipsize_title">显示长文件名</string>
     <string-array name="settings_file_name_ellipsize_entries">
         <item>省略开头</item>
