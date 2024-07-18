@@ -57,11 +57,11 @@ android {
         generateLocaleConfig true
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
+        jvmTarget = JavaVersion.VERSION_21.toString()
     }
     externalNativeBuild {
         cmake {
@@ -122,17 +122,17 @@ dependencies {
 
     // kotlinx-coroutines-android depends on kotlin-stdlib-jdk8
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    def kotlinx_coroutines_version = '1.8.1'
+    def kotlinx_coroutines_version = '1.9.0'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinx_coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version"
 
-    implementation 'androidx.activity:activity-ktx:1.9.0'
+    implementation 'androidx.activity:activity-ktx:1.9.2'
     implementation 'androidx.appcompat:appcompat:1.7.0'
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
     implementation 'androidx.exifinterface:exifinterface:1.3.7'
-    implementation 'androidx.fragment:fragment-ktx:1.8.1'
-    def androidx_lifecycle_version = '2.8.2'
+    implementation 'androidx.fragment:fragment-ktx:1.8.3'
+    def androidx_lifecycle_version = '2.8.6'
     implementation "androidx.lifecycle:lifecycle-common-java8:$androidx_lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$androidx_lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-process:$androidx_lifecycle_version"
@@ -167,7 +167,7 @@ dependencies {
         exclude group: 'com.google.guava', module: 'guava'
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
     }
-    implementation 'com.google.guava:guava:33.1.0-android'
+    implementation 'com.google.guava:guava:33.3.0-android'
     // Guava conflicts with com.google.guava:listenablefuture:1.0 pulled in by AndroidX Core
     implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
     implementation 'com.takisoft.preferencex:preferencex:1.1.0'
@@ -185,8 +185,8 @@ dependencies {
     implementation ('eu.agno3.jcifs:jcifs-ng:2.1.10') {
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk18on'
     }
-    implementation 'org.bouncycastle:bcprov-jdk15to18:1.77'
-    implementation platform('io.coil-kt:coil-bom:2.6.0')
+    implementation 'org.bouncycastle:bcprov-jdk15to18:1.78.1'
+    implementation platform('io.coil-kt:coil-bom:2.7.0')
     implementation 'io.coil-kt:coil'
     implementation 'io.coil-kt:coil-gif'
     implementation 'io.coil-kt:coil-svg'
@@ -194,7 +194,7 @@ dependencies {
     implementation 'me.zhanghai.android.appiconloader:appiconloader:1.5.0'
     implementation 'me.zhanghai.android.fastscroll:library:1.3.0'
     implementation 'me.zhanghai.android.foregroundcompat:library:1.0.2'
-    implementation 'me.zhanghai.android.libarchive:library:1.1.0'
+    implementation 'me.zhanghai.android.libarchive:library:1.1.1'
     implementation 'me.zhanghai.android.libselinux:library:2.1.0'
     implementation 'me.zhanghai.android.retrofile:library:1.1.1'
     implementation 'me.zhanghai.android.systemuihelper:library:1.0.0'
@@ -212,7 +212,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-android:1.7.36'
 
 //#ifdef NONFREE
-    implementation platform('com.google.firebase:firebase-bom:33.1.1')
+    implementation platform('com.google.firebase:firebase-bom:33.3.0')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-crashlytics-ndk'
 //#endif
