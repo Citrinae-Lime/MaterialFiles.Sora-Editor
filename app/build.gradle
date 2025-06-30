@@ -112,7 +112,7 @@ repositories {
 }
 dependencies {
     // We need https://github.com/bitfireAT/dav4jvm/commit/c1bc14348831bcdb00f3a6eec4859b81c7dc3728
-    implementation('com.github.bitfireAT:dav4jvm:8691192') {
+    implementation('com.github.bitfireAT:dav4jvm:acbfbac') {
         exclude group: 'org.ogce', module: 'xpp3'
     }
     implementation 'com.github.chrisbanes:PhotoView:2.3.0'
@@ -136,7 +136,7 @@ dependencies {
     implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
     implementation 'androidx.exifinterface:exifinterface:1.4.1'
     implementation 'androidx.fragment:fragment-ktx:1.8.7'
-    def androidx_lifecycle_version = '2.9.0'
+    def androidx_lifecycle_version = '2.9.1'
     implementation "androidx.lifecycle:lifecycle-common-java8:$androidx_lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$androidx_lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-process:$androidx_lifecycle_version"
@@ -159,7 +159,7 @@ dependencies {
         // org.bouncycastle:bcprov-jdk15to18 instead.
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
     }
-    def bouncy_castle_version = '1.80'
+    def bouncy_castle_version = '1.81'
     implementation "org.bouncycastle:bcprov-jdk15to18:$bouncy_castle_version"
     implementation ('com.hierynomus:sshj:0.40.0') {
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk18on'
@@ -211,14 +211,14 @@ dependencies {
     implementation 'org.slf4j:slf4j-android:1.7.36'
 
 //#ifdef NONFREE
-    implementation platform('com.google.firebase:firebase-bom:33.14.0')
+    implementation platform('com.google.firebase:firebase-bom:33.16.0')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-crashlytics-ndk'
 //#endif
 
     // https://github.com/Rosemoe/sora-editor
     // Better text editor
-    implementation platform('io.github.Rosemoe.sora-editor:bom:0.23.5')
+    implementation platform('io.github.Rosemoe.sora-editor:bom:0.23.6')
     implementation 'io.github.Rosemoe.sora-editor:editor'
     implementation 'io.github.Rosemoe.sora-editor:language-java'
 
