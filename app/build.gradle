@@ -112,7 +112,7 @@ repositories {
 }
 dependencies {
     // We need https://github.com/bitfireAT/dav4jvm/commit/c1bc14348831bcdb00f3a6eec4859b81c7dc3728
-    implementation('com.github.bitfireAT:dav4jvm:acbfbac') {
+    implementation('com.github.bitfireAT:dav4jvm:02fe1a9') {
         exclude group: 'org.ogce', module: 'xpp3'
     }
     implementation 'com.github.chrisbanes:PhotoView:2.3.0'
