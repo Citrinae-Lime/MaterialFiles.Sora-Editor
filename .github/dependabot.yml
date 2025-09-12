@@ -1,0 +1,41 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "Action: "
+    groups:
+      ci-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "Build: "
+    ignore:
+      # We need commit c1bc143, but don't want commit 37c2bde
+      - dependency-name: "com.github.bitfireAT:dav4jvm"
+      # SMBJ 0.12.0 broke anonymous authentication (issue #792), still an issue in 0.14.0+
+      - dependency-name: "com.hierynomus:smbj"
+      # Empty artifact to avoid duplicate class conflicts with Guava and AndroidX Core
+      - dependency-name: "com.google.guava:listenablefuture"
+      # LicensesDialog 2.2.0 pulls in androidx.webkit and uses setForceDark() instead of correctly setting colors
+      - dependency-name: "de.psdev.licensesdialog:licensesdialog"
+      # dev.chrisbanes.insetter:insetter:0.6.0 makes inset unstable when entering immersive
+      - dependency-name: "dev.chrisbanes:insetter-ktx"
+      - dependency-name: "dev.chrisbanes.insetter:*"
+      # mina-core 2.1.4+ is incompatible before API 24 due to StandardSocketOptions (DIRMINA-1123) and NetworkChannel.supportedOptions() (DIRMINA-1130)
+      - dependency-name: "org.apache.mina:mina-core"
+    groups:
+      app-dependencies:
+        patterns: ["*"]
