@@ -74,8 +74,8 @@ class ImageViewerFragment : Fragment(), ConfirmDeleteDialogFragment.Listener {
             .also { binding = it }
             .root
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         if (paths.isEmpty()) {
             // TODO: Show a toast.
@@ -123,7 +123,7 @@ class ImageViewerFragment : Fragment(), ConfirmDeleteDialogFragment.Listener {
         super.onViewStateRestored(savedInstanceState)
 
         if (paths.isEmpty()) {
-            // We did finish the activity in onActivityCreated(), however we will still be called
+            // We did finish the activity in onViewCreated(), however we will still be called
             // here before the activity is actually finished.
             return
         }

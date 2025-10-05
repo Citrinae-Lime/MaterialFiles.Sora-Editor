@@ -21,8 +21,8 @@ import me.zhanghai.android.files.util.showToast
 class AddExternalStorageShortcutFragment : Fragment() {
     private val args by args<Args>()
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
         val uri = args.uri
         val hasDocumentsUi = uri.value.createDocumentsUiViewDirectoryIntent()

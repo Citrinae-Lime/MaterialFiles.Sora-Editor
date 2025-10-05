@@ -58,8 +58,8 @@ class FilePropertiesDialogFragment : AppCompatDialogFragment() {
         savedInstanceState: Bundle?
     ): View = binding.root
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         // Initialize the shared file view model before child fragments are created.
         viewModel.fileLiveData

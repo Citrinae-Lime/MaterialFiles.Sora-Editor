@@ -29,8 +29,8 @@ class SettingsPreferenceFragment : PreferenceFragmentCompat() {
         }
     }
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         val viewLifecycleOwner = viewLifecycleOwner
         // The following may end up passing the same lambda instance to the observer because it has

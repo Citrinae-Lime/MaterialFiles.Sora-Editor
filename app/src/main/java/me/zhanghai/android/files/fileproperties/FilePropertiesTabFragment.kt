@@ -36,8 +36,8 @@ abstract class FilePropertiesTabFragment : Fragment() {
             .also { binding = it }
             .root
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         binding.swipeRefreshLayout.setOnRefreshListener { refresh() }
     }

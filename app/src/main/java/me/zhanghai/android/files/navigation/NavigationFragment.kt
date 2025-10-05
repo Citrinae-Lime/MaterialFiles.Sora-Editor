@@ -33,8 +33,8 @@ class NavigationFragment : Fragment(), NavigationItem.Listener {
             .also { binding = it }
             .root
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         binding.recyclerView.setHasFixedSize(true)
         // TODO: Needed?

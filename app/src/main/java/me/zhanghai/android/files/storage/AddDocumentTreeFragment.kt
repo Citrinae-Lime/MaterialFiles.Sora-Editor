@@ -20,8 +20,8 @@ class AddDocumentTreeFragment : Fragment() {
         ActivityResultContracts.OpenDocumentTree(), this::onOpenDocumentTreeResult
     )
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
         if (savedInstanceState == null) {
             openDocumentTreeLauncher.launchSafe(null, this)

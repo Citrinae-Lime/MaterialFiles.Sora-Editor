@@ -45,8 +45,8 @@ class AddLanSmbServerFragment : Fragment() {
             .also { binding = it }
             .root
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
         val activity = requireActivity() as AppCompatActivity
         activity.setSupportActionBar(binding.toolbar)
