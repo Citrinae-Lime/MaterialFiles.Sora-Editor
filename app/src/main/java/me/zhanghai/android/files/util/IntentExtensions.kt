@@ -8,6 +8,7 @@ package me.zhanghai.android.files.util
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Parcelable
 import android.provider.MediaStore
 import android.provider.Settings
@@ -77,19 +78,34 @@ fun KClass<Intent>.createViewAppInMarket(packageName: String): Intent =
 fun KClass<Intent>.createViewLocation(latitude: Float, longitude: Float, label: String): Intent =
     Uri.parse("geo:0,0?q=$latitude,$longitude(${Uri.encode(label)})").createViewIntent()
 
-fun <T : Parcelable> Intent.getParcelableExtraSafe(key: String?): T? {
+inline fun <reified T : Parcelable> Intent.getParcelableExtraSafe(key: String?): T? {
     setExtrasClassLoader(appClassLoader)
-    return getParcelableExtra(key)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getParcelableExtra(key, T::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelableExtra(key)
+    }
 }
 
 fun Intent.getParcelableArrayExtraSafe(key: String?): Array<Parcelable>? {
     setExtrasClassLoader(appClassLoader)
-    return getParcelableArrayExtra(key)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getParcelableArrayExtra(key, Parcelable::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelableArrayExtra(key)
+    }
 }
 
-fun <T : Parcelable?> Intent.getParcelableArrayListExtraSafe(key: String?): ArrayList<T>? {
+inline fun <reified T : Parcelable> Intent.getParcelableArrayListExtraSafe(key: String?): ArrayList<T>? {
     setExtrasClassLoader(appClassLoader)
-    return getParcelableArrayListExtra(key)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getParcelableArrayListExtra(key, T::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelableArrayListExtra(key)
+    }
 }
 
 fun Intent.withChooser(title: CharSequence? = null, vararg initialIntents: Intent): Intent =

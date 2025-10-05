@@ -5,27 +5,48 @@
 
 package me.zhanghai.android.files.util
 
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.SparseArray
 import me.zhanghai.android.files.app.appClassLoader
 
-fun <T : Parcelable> Bundle.getParcelableSafe(key: String?): T? {
+inline fun <reified T : Parcelable> Bundle.getParcelableSafe(key: String?): T? {
     classLoader = appClassLoader
-    return getParcelable(key)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getParcelable(key, T::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelable(key)
+    }
 }
 
 fun Bundle.getParcelableArraySafe(key: String?): Array<Parcelable>? {
     classLoader = appClassLoader
-    return getParcelableArray(key)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getParcelableArray(key, Parcelable::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelableArray(key)
+    }
 }
 
-fun <T : Parcelable?> Bundle.getParcelableArrayListSafe(key: String?): ArrayList<T>? {
+inline fun <reified T : Parcelable> Bundle.getParcelableArrayListSafe(key: String?): ArrayList<T>? {
     classLoader = appClassLoader
-    return getParcelableArrayList(key)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getParcelableArrayList(key, T::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelableArrayList(key)
+    }
 }
 
-fun <T : Parcelable?> Bundle.getSparseParcelableArraySafe(key: String?): SparseArray<T>? {
+inline fun <reified T : Parcelable> Bundle.getSparseParcelableArraySafe(key: String?): SparseArray<T>? {
     classLoader = appClassLoader
-    return getSparseParcelableArray(key)
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getSparseParcelableArray(key, T::class.java)
+    } else {
+        @Suppress("DEPRECATION")
+        getSparseParcelableArray(key)
+    }
 }
