@@ -14,7 +14,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.core.view.isVisible
 import androidx.core.widget.NestedScrollView
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parceler
@@ -76,8 +78,10 @@ class FileJobErrorDialogFragment : AppCompatDialogFragment() {
                 }
 
                 if (hasReadOnlyFileStore) {
-                    lifecycleScope.launchWhenStarted {
-                        launch { viewModel.remountState.collect { onRemountStateChanged(it) } }
+                    lifecycleScope.launch {
+                        repeatOnLifecycle(Lifecycle.State.STARTED) {
+                            viewModel.remountState.collect { onRemountStateChanged(it) }
+                        }
                     }
                 }
             }

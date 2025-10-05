@@ -54,17 +54,12 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        lifecycleScope.launchWhenStarted {
-            onBackPressedCallback = object : OnBackPressedCallback(false) {
-                override fun handleOnBackPressed() {
-                    ConfirmCloseDialogFragment.show(this@SoraEditorFragment)
-                }
+        onBackPressedCallback = object : OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() {
+                ConfirmCloseDialogFragment.show(this@SoraEditorFragment)
             }
-            launch {
-                onBackPressedCallback.isEnabled = textChanged()
-            }
-            addOnBackPressedCallback(onBackPressedCallback)
         }
+        addOnBackPressedCallback(onBackPressedCallback)
 
         val argsFile = args.intent.extraPath
         if (argsFile == null) {
@@ -88,10 +83,8 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         super.onViewCreated(view, savedInstanceState)
 
         val activity = requireActivity() as AppCompatActivity
-        activity.lifecycleScope.launchWhenCreated {
-            activity.setSupportActionBar(binding.toolbar)
-            activity.supportActionBar!!.setDisplayHomeAsUpEnabled(true)
-        }
+        activity.setSupportActionBar(binding.toolbar)
+        activity.supportActionBar!!.setDisplayHomeAsUpEnabled(true)
 
         codeEditor.setEditorLanguage(JavaLanguage())
         codeEditor.colorScheme =
@@ -105,6 +98,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
             run {
                 updateTitle()
                 requireActivity().invalidateOptionsMenu()
+                onBackPressedCallback.isEnabled = textChanged()
             }
         }
     }
