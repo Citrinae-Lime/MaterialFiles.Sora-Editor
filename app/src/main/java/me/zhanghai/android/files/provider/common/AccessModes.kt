@@ -18,7 +18,6 @@ fun Array<out AccessMode>.toAccessModes(): AccessModes {
             AccessMode.READ -> read = true
             AccessMode.WRITE -> write = true
             AccessMode.EXECUTE -> execute = true
-            else -> throw UnsupportedOperationException(mode.toString())
         }
     }
     return AccessModes(read, write, execute)

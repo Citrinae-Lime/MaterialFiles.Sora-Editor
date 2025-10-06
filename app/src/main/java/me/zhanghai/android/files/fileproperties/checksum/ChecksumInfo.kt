@@ -10,7 +10,7 @@ import me.zhanghai.android.files.R
 import java.security.MessageDigest
 
 class ChecksumInfo(val checksums: Map<Algorithm, String>) {
-    enum class Algorithm(@StringRes val nameRes: Int) {
+    enum class Algorithm(@field:StringRes val nameRes: Int) {
         CRC32(R.string.file_properties_checksum_crc32),
         MD5(R.string.file_properties_checksum_md5),
         SHA1(R.string.file_properties_checksum_sha_1),

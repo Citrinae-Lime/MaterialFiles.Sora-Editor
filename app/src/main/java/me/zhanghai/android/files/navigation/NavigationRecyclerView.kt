@@ -89,6 +89,7 @@ class NavigationRecyclerView : RecyclerView {
     override fun draw(canvas: Canvas) {
         super.draw(canvas)
 
+        @Suppress("DEPRECATION")
         if (context.activity!!.window.statusBarColor == Color.TRANSPARENT) {
             canvas.withSave {
                 canvas.translate(scrollX.toFloat(), scrollY.toFloat())

@@ -31,4 +31,9 @@ data class BookmarkDirectory internal constructor(
 
     val name: String
         get() = customName?.takeIfNotEmpty() ?: defaultName
+
+    // Suppress the warning about copy() being public while constructor is internal
+    @Suppress("NOTHING_TO_INLINE")
+    private inline fun copy(id: Long = this.id, customName: String? = this.customName, path: Path = this.path) =
+        BookmarkDirectory(id, customName, path)
 }
