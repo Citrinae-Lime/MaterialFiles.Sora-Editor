@@ -21,6 +21,16 @@ inline fun <reified T : Parcelable> Bundle.getParcelableSafe(key: String?): T? {
     }
 }
 
+fun <T : Parcelable> Bundle.getParcelableSafe(key: String?, clazz: Class<T>): T? {
+    classLoader = appClassLoader
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        getParcelable(key, clazz)
+    } else {
+        @Suppress("DEPRECATION")
+        getParcelable(key)
+    }
+}
+
 fun Bundle.getParcelableArraySafe(key: String?): Array<Parcelable>? {
     classLoader = appClassLoader
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

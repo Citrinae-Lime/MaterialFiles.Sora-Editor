@@ -7,6 +7,7 @@ package me.zhanghai.android.files.settings
 
 import android.os.Build
 import android.os.Bundle
+import android.view.View
 import me.zhanghai.android.files.R
 import me.zhanghai.android.files.theme.custom.CustomThemeHelper
 import me.zhanghai.android.files.theme.custom.ThemeColor

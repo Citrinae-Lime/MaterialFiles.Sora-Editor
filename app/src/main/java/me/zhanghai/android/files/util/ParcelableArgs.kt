@@ -51,7 +51,7 @@ fun <Args : ParcelableArgs> Bundle.getArgs(argsClass: KClass<Args>): Args =
 inline fun <reified Args : ParcelableArgs> Bundle.getArgs() = getArgs(Args::class)
 
 fun <Args : ParcelableArgs> Bundle.getArgsOrNull(argsClass: KClass<Args>): Args? =
-    getParcelableSafe<Args>(argsClass.java.name)
+    getParcelableSafe(argsClass.java.name, argsClass.java)
 
 inline fun <reified Args : ParcelableArgs> Bundle.getArgsOrNull() = getArgsOrNull(Args::class)
 

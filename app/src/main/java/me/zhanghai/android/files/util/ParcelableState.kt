@@ -15,6 +15,6 @@ fun <State : ParcelableState> Bundle.putState(state: State) =
     putParcelable(state.javaClass.name, state)
 
 fun <State : ParcelableState> Bundle.getState(stateClass: KClass<State>): State =
-    getParcelableSafe<State>(stateClass.java.name)!!
+    getParcelableSafe(stateClass.java.name, stateClass.java)!!
 
 inline fun <reified State : ParcelableState> Bundle.getState() = getState(State::class)
