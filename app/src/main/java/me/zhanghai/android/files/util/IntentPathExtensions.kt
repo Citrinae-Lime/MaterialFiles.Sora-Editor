@@ -42,7 +42,7 @@ val Intent.saveAsPath: Path?
         val uri =
             when (action) {
                 Intent.ACTION_VIEW -> data
-                Intent.ACTION_SEND -> getParcelableExtraSafe(Intent.EXTRA_STREAM) as? Uri
+                Intent.ACTION_SEND -> getParcelableExtraSafe<Uri>(Intent.EXTRA_STREAM)
                 else -> null
             }
         return uri?.toPathOrNull()
