@@ -6,7 +6,7 @@
 package me.zhanghai.android.files.fileproperties.image
 
 import android.graphics.BitmapFactory
-import android.os.AsyncTask
+import me.zhanghai.android.files.util.backgroundThreadPoolExecutor
 import android.util.Size
 import androidx.exifinterface.media.ExifInterface
 import com.caverock.androidsvg.SVG
@@ -35,7 +35,7 @@ class ImageInfoLiveData(
 
     override fun loadValue() {
         value = Loading(value?.value)
-        AsyncTask.THREAD_POOL_EXECUTOR.execute {
+        backgroundThreadPoolExecutor.execute {
             val value = try {
                 val imageInfo = when (mimeType) {
                     MimeType.IMAGE_SVG_XML -> {

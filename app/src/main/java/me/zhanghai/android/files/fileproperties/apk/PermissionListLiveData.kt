@@ -5,7 +5,7 @@
 
 package me.zhanghai.android.files.fileproperties.apk
 
-import android.os.AsyncTask
+import me.zhanghai.android.files.util.backgroundThreadPoolExecutor
 import androidx.lifecycle.MutableLiveData
 import me.zhanghai.android.files.app.packageManager
 import me.zhanghai.android.files.util.Failure
@@ -24,7 +24,7 @@ class PermissionListLiveData(
 
     private fun loadValue() {
         value = Loading(value?.value)
-        AsyncTask.THREAD_POOL_EXECUTOR.execute {
+        backgroundThreadPoolExecutor.execute {
             val value = try {
                 val permissions = permissionNames.map { name ->
                     val packageManager = packageManager

@@ -5,7 +5,7 @@
 
 package me.zhanghai.android.files.fileproperties.checksum
 
-import android.os.AsyncTask
+import me.zhanghai.android.files.util.backgroundThreadPoolExecutor
 import java8.nio.file.Path
 import me.zhanghai.android.files.fileproperties.PathObserverLiveData
 import me.zhanghai.android.files.provider.common.newInputStream
@@ -29,7 +29,7 @@ class ChecksumInfoLiveData(path: Path) : PathObserverLiveData<Stateful<ChecksumI
     override fun loadValue() {
         future?.cancel(true)
         value = Loading(value?.value)
-        future = (AsyncTask.THREAD_POOL_EXECUTOR as ExecutorService).submit<Unit> {
+        future = (backgroundThreadPoolExecutor as ExecutorService).submit<Unit> {
             val value = try {
                 val messageDigests =
                     ChecksumInfo.Algorithm.entries.associateWith { it.createMessageDigest() }

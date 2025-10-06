@@ -5,7 +5,7 @@
 
 package me.zhanghai.android.files.fileproperties
 
-import android.os.AsyncTask
+import me.zhanghai.android.files.util.backgroundThreadPoolExecutor
 import java8.nio.file.Path
 import me.zhanghai.android.files.file.FileItem
 import me.zhanghai.android.files.file.loadFileItem
@@ -34,7 +34,7 @@ class FileLiveData private constructor(
 
     override fun loadValue() {
         value = Loading(value?.value)
-        AsyncTask.THREAD_POOL_EXECUTOR.execute {
+        backgroundThreadPoolExecutor.execute {
             val value = try {
                 val file = path.loadFileItem()
                 Success(file)

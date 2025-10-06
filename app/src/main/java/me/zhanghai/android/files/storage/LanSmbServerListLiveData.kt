@@ -5,7 +5,7 @@
 
 package me.zhanghai.android.files.storage
 
-import android.os.AsyncTask
+import me.zhanghai.android.files.util.backgroundThreadPoolExecutor
 import jcifs.context.SingletonContext
 import jcifs.smb.SmbException
 import jcifs.smb.SmbFile
@@ -41,7 +41,7 @@ class LanSmbServerListLiveData : CloseableLiveData<Stateful<List<LanSmbServer>>>
     fun loadValue() {
         cancelLoadingValue()
         value = Loading(value?.value)
-        loadFuture = (AsyncTask.THREAD_POOL_EXECUTOR as ExecutorService).submit {
+        loadFuture = (backgroundThreadPoolExecutor as ExecutorService).submit {
             try {
                 val newServerSet = mutableSetOf<LanSmbServer>()
                 Executors.newFixedThreadPool(60).asCoroutineDispatcher().use { dispatcher ->
