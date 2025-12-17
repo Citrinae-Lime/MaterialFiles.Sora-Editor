@@ -55,7 +55,6 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     private var fileContents: String? = null
     private var errorMessage: String? = null
     private var isLoading = false
-    private var currentLanguage: String? = null
     private var detectedCharset: Charset = StandardCharsets.UTF_8
     private var hadBom: Boolean = false
 
@@ -103,7 +102,6 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         }
 
         codeEditor.isFocusableInTouchMode = true
-        codeEditor.requestFocus()
 
         setLanguageForFile(argsFile.fileName.toString())
         applyColorScheme()
@@ -182,7 +180,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
             private fun syncMenu(menu: Menu) {
                 menu.findItem(R.id.action_word_warp).isChecked = codeEditor.isWordwrap
                 menu.findItem(R.id.action_syntax_highlight).isChecked =
-                    codeEditor.editorLanguage is JavaLanguage || currentLanguage != null
+                    codeEditor.editorLanguage != null
                 menu.findItem(R.id.action_redo).isEnabled = codeEditor.canRedo()
                 menu.findItem(R.id.action_undo).isEnabled = codeEditor.canUndo()
             }
@@ -218,7 +216,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     }
 
     private fun onReload() {
-        if (binding.progress.isVisible || isLoading) return
+        if (isLoading) return
         if (textChanged()) {
             ConfirmReloadDialogFragment.show(this)
         } else reload()
@@ -233,7 +231,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         binding.errorText.visibility = View.GONE
 
         lifecycleScope.launch(Dispatchers.IO) {
-            val result = readFileStreaming(argsFile)
+            val result = readFileAsText(argsFile)
 
             launch(Dispatchers.Main) {
                 isLoading = false
@@ -247,6 +245,11 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                     codeEditor.setText(result)
                     fileContents = result
                     updateTitle()
+                    // Request focus after content load to reduce IME/focus oddities, but avoid stealing
+                    // focus if something else is already focused (e.g. toolbar/search).
+                    if (!codeEditor.hasFocus() && requireActivity().currentFocus == null) {
+                        codeEditor.requestFocus()
+                    }
                 }
             }
         }
@@ -258,7 +261,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         FileJobService.write(argsFile, text.toByteArray(charset), requireContext()) { success ->
             if (success) {
                 if (hadBom) {
-                    addBomIfNeeded(argsFile, charset)
+                    ensureBomIfNeeded(argsFile, charset)
                 }
                 fileContents = text
                 showToast(getString(R.string.text_editor_save_success))
@@ -267,7 +270,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         }
     }
 
-    private fun readFileStreaming(file: Path): String? {
+    private fun readFileAsText(file: Path): String? {
         return try {
             errorMessage = null
             detectedCharset = detectEncoding(file)
@@ -296,65 +299,80 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         toolbar.setTitleTextColor(onSurface)
         toolbar.setSubtitleTextColor(onSurface)
         toolbar.navigationIcon?.let { icon ->
-            DrawableCompat.setTint(icon, onSurface)
-            toolbar.navigationIcon = icon
+            val wrapped = DrawableCompat.wrap(icon).mutate()
+            DrawableCompat.setTint(wrapped, onSurface)
+            toolbar.navigationIcon = wrapped
         }
         toolbar.overflowIcon?.let { icon ->
-            DrawableCompat.setTint(icon, onSurface)
-            toolbar.overflowIcon = icon
+            val wrapped = DrawableCompat.wrap(icon).mutate()
+            DrawableCompat.setTint(wrapped, onSurface)
+            toolbar.overflowIcon = wrapped
         }
     }
 
     private fun setLanguageForFile(name: String) {
-        currentLanguage = when {
-            name.endsWith(".kt") || name.endsWith(".kts") -> "kotlin"
-            name.endsWith(".java") -> "java"
-            name.endsWith(".js") || name.endsWith(".ts") -> "javascript"
-            name.endsWith(".json") -> "json"
-            name.endsWith(".xml") -> "xml"
-            else -> null
-        }
+        // Only keep Java for now. Other types should fall back to plain text until TextMate are integrated.
+        // TODO: TextMate
         codeEditor.setEditorLanguage(
-            when (currentLanguage) {
-                "java" -> JavaLanguage()
-                else -> null // plain text fallback
-            }
+            if (name.endsWith(".java")) JavaLanguage() else null
         )
         applyColorScheme()
     }
 
     private fun detectEncoding(file: Path): Charset {
-        BufferedInputStream(Files.newInputStream(file)).use { input ->
-            val bom = ByteArray(3)
-            val read = input.read(bom)
-            return when {
-                read >= 3 && bom[0] == 0xEF.toByte() && bom[1] == 0xBB.toByte() && bom[2] == 0xBF.toByte() -> {
-                    hadBom = true; StandardCharsets.UTF_8
-                }
-                read >= 2 && bom[0] == 0xFE.toByte() && bom[1] == 0xFF.toByte() -> {
-                    hadBom = true; StandardCharsets.UTF_16BE
-                }
-                read >= 2 && bom[0] == 0xFF.toByte() && bom[1] == 0xFE.toByte() -> {
-                    hadBom = true; StandardCharsets.UTF_16LE
-                }
-                else -> {
-                    hadBom = false; StandardCharsets.UTF_8
+        return try {
+            BufferedInputStream(Files.newInputStream(file)).use { input ->
+                val bom = ByteArray(3)
+                val read = input.read(bom)
+                when {
+                    read >= 3 && bom[0] == 0xEF.toByte() && bom[1] == 0xBB.toByte() && bom[2] == 0xBF.toByte() -> {
+                        hadBom = true; StandardCharsets.UTF_8
+                    }
+                    read >= 2 && bom[0] == 0xFE.toByte() && bom[1] == 0xFF.toByte() -> {
+                        hadBom = true; StandardCharsets.UTF_16BE
+                    }
+                    read >= 2 && bom[0] == 0xFF.toByte() && bom[1] == 0xFE.toByte() -> {
+                        hadBom = true; StandardCharsets.UTF_16LE
+                    }
+                    else -> {
+                        // If we can't detect encoding by BOM, default to UTF-8.
+                        // NOTE: This may mis-detect legacy encodings without BOM.
+                        hadBom = false; StandardCharsets.UTF_8
+                    }
                 }
             }
+        } catch (_: Throwable) {
+            // If encoding detection fails for any reason, fall back to UTF-8.
+            hadBom = false
+            StandardCharsets.UTF_8
         }
     }
 
-    private fun addBomIfNeeded(file: Path, charset: Charset) {
+    private fun ensureBomIfNeeded(file: Path, charset: Charset) {
         val bom = when (charset) {
             StandardCharsets.UTF_8 -> byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
             StandardCharsets.UTF_16BE -> byteArrayOf(0xFE.toByte(), 0xFF.toByte())
             StandardCharsets.UTF_16LE -> byteArrayOf(0xFF.toByte(), 0xFE.toByte())
             else -> return
         }
+        // Check if BOM is already present to avoid repeatedly prepending it on each save.
+        if (hasBom(file, bom)) return
         val original = Files.readAllBytes(file)
         BufferedOutputStream(Files.newOutputStream(file)).use {
             it.write(bom)
             it.write(original)
+        }
+    }
+
+    private fun hasBom(file: Path, bom: ByteArray): Boolean {
+        return try {
+            BufferedInputStream(Files.newInputStream(file)).use { input ->
+                val head = ByteArray(bom.size)
+                val read = input.read(head)
+                read == bom.size && head.contentEquals(bom)
+            }
+        } catch (_: Throwable) {
+            false
         }
     }
 
