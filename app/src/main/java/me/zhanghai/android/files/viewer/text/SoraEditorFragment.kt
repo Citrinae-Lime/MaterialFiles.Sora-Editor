@@ -9,6 +9,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
@@ -20,6 +21,7 @@ import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
+import com.google.android.material.color.MaterialColors
 import java8.nio.file.Files
 import java8.nio.file.Path
 import kotlinx.coroutines.Dispatchers
@@ -97,6 +99,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         activity.lifecycleScope.launchWhenCreated {
             activity.setSupportActionBar(binding.toolbar)
             activity.supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+            updateToolbarColors()
         }
 
         codeEditor.isFocusableInTouchMode = true
@@ -119,7 +122,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         super.onConfigurationChanged(newConfig)
         applyColorScheme()
         codeEditor.invalidate()
-        //TODO: Update toolbar color scheme on dark/light mode toggle
+        updateToolbarColors()
     }
 
     private fun setupMenu() {
@@ -259,7 +262,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                 }
                 fileContents = text
                 showToast(getString(R.string.text_editor_save_success))
-                updateTitle()   // Fix title do not update after save
+                updateTitle()
             }
         }
     }
@@ -283,6 +286,23 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         codeEditor.colorScheme =
             if (NightModeHelper.isInNightMode(activity as AppCompatActivity)) SchemeDarcula()
             else EditorColorScheme()
+    }
+
+    private fun updateToolbarColors() {
+        val toolbar = binding.toolbar
+        val surface = MaterialColors.getColor(toolbar, com.google.android.material.R.attr.colorSurface, 0)
+        val onSurface = MaterialColors.getColor(toolbar, com.google.android.material.R.attr.colorOnSurface, 0)
+        toolbar.setBackgroundColor(surface)
+        toolbar.setTitleTextColor(onSurface)
+        toolbar.setSubtitleTextColor(onSurface)
+        toolbar.navigationIcon?.let { icon ->
+            DrawableCompat.setTint(icon, onSurface)
+            toolbar.navigationIcon = icon
+        }
+        toolbar.overflowIcon?.let { icon ->
+            DrawableCompat.setTint(icon, onSurface)
+            toolbar.overflowIcon = icon
+        }
     }
 
     private fun setLanguageForFile(name: String) {
