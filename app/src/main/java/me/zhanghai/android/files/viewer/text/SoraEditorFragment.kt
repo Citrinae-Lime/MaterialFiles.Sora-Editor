@@ -9,7 +9,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.EditorInfo
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
@@ -17,8 +16,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import io.github.rosemoe.sora.event.ContentChangeEvent
-import io.github.rosemoe.sora.event.EventReceiver
-import io.github.rosemoe.sora.event.UndoRedoEvent
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
@@ -37,9 +34,9 @@ import me.zhanghai.android.files.util.addOnBackPressedCallback
 import me.zhanghai.android.files.util.args
 import me.zhanghai.android.files.util.extraPath
 import me.zhanghai.android.files.util.showToast
-import java.io.IOException
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
+import java.io.IOException
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
@@ -104,10 +101,6 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
         codeEditor.isFocusableInTouchMode = true
         codeEditor.requestFocus()
-        codeEditor.setInputType(
-            EditorInfo.TYPE_CLASS_TEXT or EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE or
-                EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-        )
 
         setLanguageForFile(argsFile.fileName.toString())
         applyColorScheme()
@@ -118,9 +111,6 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
         codeEditor.subscribeEvent(ContentChangeEvent::class.java) { _, _ ->
             updateTitle()
-            requireActivity().invalidateOptionsMenu()
-        }
-        codeEditor.subscribeEvent(UndoRedoEvent::class.java) { _, _ ->
             requireActivity().invalidateOptionsMenu()
         }
     }
@@ -135,7 +125,6 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     private fun setupMenu() {
         requireActivity().addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-
                 menuInflater.inflate(R.menu.sora_editor, menu)
                 syncMenu(menu)
             }
@@ -167,13 +156,17 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                         true
                     }
                     R.id.action_undo -> {
-                        if (codeEditor.canUndo())
+                        if (codeEditor.canUndo()) {
                             codeEditor.undo()
+                            requireActivity().invalidateOptionsMenu()
+                        }
                         true
                     }
                     R.id.action_redo -> {
-                        if (codeEditor.canRedo())
+                        if (codeEditor.canRedo()) {
                             codeEditor.redo()
+                            requireActivity().invalidateOptionsMenu()
+                        }
                         true
                     }
                     R.id.action_reload -> {
@@ -192,7 +185,6 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
             }
         })
     }
-
 
     fun onSupportNavigateUp(): Boolean {
         if (onBackPressedCallback.isEnabled) {
@@ -261,14 +253,13 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         val text = codeEditor.text.toString()
         val charset = detectedCharset
         FileJobService.write(argsFile, text.toByteArray(charset), requireContext()) { success ->
-             if (success) {
+            if (success) {
                 if (hadBom) {
                     addBomIfNeeded(argsFile, charset)
                 }
-            if (success) {
                 fileContents = text
                 showToast(getString(R.string.text_editor_save_success))
-                updateTitle()   //Fix title do not update after save
+                updateTitle()   // Fix title do not update after save
             }
         }
     }
@@ -349,5 +340,4 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
     @Parcelize
     class Args(val intent: Intent) : ParcelableArgs
-
 }
