@@ -9,6 +9,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
@@ -17,6 +18,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.EventReceiver
+import io.github.rosemoe.sora.event.UndoRedoEvent
 import io.github.rosemoe.sora.langs.java.JavaLanguage
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
@@ -36,6 +38,9 @@ import me.zhanghai.android.files.util.args
 import me.zhanghai.android.files.util.extraPath
 import me.zhanghai.android.files.util.showToast
 import java.io.IOException
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
@@ -50,6 +55,10 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
     private var fileContents: String? = null
     private var errorMessage: String? = null
+    private var isLoading = false
+    private var currentLanguage: String? = null
+    private var detectedCharset: Charset = StandardCharsets.UTF_8
+    private var hadBom: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,26 +102,32 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
             activity.supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         }
 
-        codeEditor.setEditorLanguage(JavaLanguage())
-        codeEditor.colorScheme =
-            if (NightModeHelper.isInNightMode(activity)) SchemeDarcula() else EditorColorScheme()
+        codeEditor.isFocusableInTouchMode = true
+        codeEditor.requestFocus()
+        codeEditor.setInputType(
+            EditorInfo.TYPE_CLASS_TEXT or EditorInfo.TYPE_TEXT_FLAG_MULTI_LINE or
+                EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        )
+
+        setLanguageForFile(argsFile.fileName.toString())
+        applyColorScheme()
 
         updateTitle()
         setupMenu()
         reload()
 
         codeEditor.subscribeEvent(ContentChangeEvent::class.java) { _, _ ->
-            run {
-                updateTitle()
-                requireActivity().invalidateOptionsMenu()
-            }
+            updateTitle()
+            requireActivity().invalidateOptionsMenu()
+        }
+        codeEditor.subscribeEvent(UndoRedoEvent::class.java) { _, _ ->
+            requireActivity().invalidateOptionsMenu()
         }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        codeEditor.colorScheme =
-            if (NightModeHelper.isInNightMode(activity as AppCompatActivity)) SchemeDarcula() else EditorColorScheme()
+        applyColorScheme()
         codeEditor.invalidate()
         //TODO: Update toolbar color scheme on dark/light mode toggle
     }
@@ -122,13 +137,11 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
 
                 menuInflater.inflate(R.menu.sora_editor, menu)
-                menu.findItem(R.id.action_word_warp).isChecked = codeEditor.isWordwrap
-                menu.findItem(R.id.action_syntax_highlight).isChecked =
-                    codeEditor.editorLanguage is JavaLanguage
+                syncMenu(menu)
+            }
 
-                menu.findItem(R.id.action_redo).isEnabled = codeEditor.canRedo()
-                menu.findItem(R.id.action_undo).isEnabled = codeEditor.canUndo()
-
+            override fun onPrepareMenu(menu: Menu) {
+                syncMenu(menu)
             }
 
             override fun onMenuItemSelected(item: MenuItem): Boolean =
@@ -144,10 +157,13 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                         true
                     }
                     R.id.action_syntax_highlight -> {
-                        codeEditor.setEditorLanguage(
-                            if (codeEditor.editorLanguage is JavaLanguage) null else JavaLanguage()
-                        )
-                        item.isChecked = codeEditor.editorLanguage is JavaLanguage
+                        if (codeEditor.editorLanguage == null) {
+                            setLanguageForFile(argsFile.fileName.toString())
+                        } else {
+                            codeEditor.setEditorLanguage(null)
+                            currentLanguage = null
+                        }
+                        item.isChecked = codeEditor.editorLanguage != null
                         true
                     }
                     R.id.action_undo -> {
@@ -166,6 +182,14 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                     }
                     else -> false
                 }
+
+            private fun syncMenu(menu: Menu) {
+                menu.findItem(R.id.action_word_warp).isChecked = codeEditor.isWordwrap
+                menu.findItem(R.id.action_syntax_highlight).isChecked =
+                    codeEditor.editorLanguage is JavaLanguage || currentLanguage != null
+                menu.findItem(R.id.action_redo).isEnabled = codeEditor.canRedo()
+                menu.findItem(R.id.action_undo).isEnabled = codeEditor.canUndo()
+            }
         })
     }
 
@@ -199,30 +223,35 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     }
 
     private fun onReload() {
-        if (binding.progress.isVisible) return
+        if (binding.progress.isVisible || isLoading) return
         if (textChanged()) {
             ConfirmReloadDialogFragment.show(this)
         } else reload()
     }
 
     override fun reload() {
+        if (isLoading) return
+        isLoading = true
 
         binding.progress.visibility = View.VISIBLE
         binding.codeEditor.visibility = View.GONE
         binding.errorText.visibility = View.GONE
 
         lifecycleScope.launch(Dispatchers.IO) {
-            fileContents = readFile(argsFile)
+            val result = readFileStreaming(argsFile)
 
             launch(Dispatchers.Main) {
+                isLoading = false
                 binding.progress.visibility = View.GONE
-                if (fileContents == null && errorMessage != null) {
+                if (result == null && errorMessage != null) {
                     binding.errorText.text = errorMessage
                     binding.errorText.visibility = View.VISIBLE
                     codeEditor.visibility = View.GONE
                 } else {
                     codeEditor.visibility = View.VISIBLE
-                    codeEditor.setText(fileContents)
+                    codeEditor.setText(result)
+                    fileContents = result
+                    updateTitle()
                 }
             }
         }
@@ -230,9 +259,12 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
     private fun save() {
         val text = codeEditor.text.toString()
-        val bytes = text.toByteArray(StandardCharsets.UTF_8)
-
-        FileJobService.write(argsFile, bytes, requireContext()) { success ->
+        val charset = detectedCharset
+        FileJobService.write(argsFile, text.toByteArray(charset), requireContext()) { success ->
+             if (success) {
+                if (hadBom) {
+                    addBomIfNeeded(argsFile, charset)
+                }
             if (success) {
                 fileContents = text
                 showToast(getString(R.string.text_editor_save_success))
@@ -241,10 +273,11 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         }
     }
 
-    private fun readFile(file: Path): String? {
+    private fun readFileStreaming(file: Path): String? {
         return try {
             errorMessage = null
-            String(Files.readAllBytes(file))
+            detectedCharset = detectEncoding(file)
+            Files.newBufferedReader(file, detectedCharset).use { it.readText() }
         } catch (err: Throwable) {
             if (err !is OutOfMemoryError && err !is IOException) throw err
             errorMessage = err.localizedMessage
@@ -255,6 +288,64 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     private fun textChanged() =
         errorMessage == null && fileContents != null && codeEditor.text.toString() != fileContents
 
+    private fun applyColorScheme() {
+        codeEditor.colorScheme =
+            if (NightModeHelper.isInNightMode(activity as AppCompatActivity)) SchemeDarcula()
+            else EditorColorScheme()
+    }
+
+    private fun setLanguageForFile(name: String) {
+        currentLanguage = when {
+            name.endsWith(".kt") || name.endsWith(".kts") -> "kotlin"
+            name.endsWith(".java") -> "java"
+            name.endsWith(".js") || name.endsWith(".ts") -> "javascript"
+            name.endsWith(".json") -> "json"
+            name.endsWith(".xml") -> "xml"
+            else -> null
+        }
+        codeEditor.setEditorLanguage(
+            when (currentLanguage) {
+                "java" -> JavaLanguage()
+                else -> null // plain text fallback
+            }
+        )
+        applyColorScheme()
+    }
+
+    private fun detectEncoding(file: Path): Charset {
+        BufferedInputStream(Files.newInputStream(file)).use { input ->
+            val bom = ByteArray(3)
+            val read = input.read(bom)
+            return when {
+                read >= 3 && bom[0] == 0xEF.toByte() && bom[1] == 0xBB.toByte() && bom[2] == 0xBF.toByte() -> {
+                    hadBom = true; StandardCharsets.UTF_8
+                }
+                read >= 2 && bom[0] == 0xFE.toByte() && bom[1] == 0xFF.toByte() -> {
+                    hadBom = true; StandardCharsets.UTF_16BE
+                }
+                read >= 2 && bom[0] == 0xFF.toByte() && bom[1] == 0xFE.toByte() -> {
+                    hadBom = true; StandardCharsets.UTF_16LE
+                }
+                else -> {
+                    hadBom = false; StandardCharsets.UTF_8
+                }
+            }
+        }
+    }
+
+    private fun addBomIfNeeded(file: Path, charset: Charset) {
+        val bom = when (charset) {
+            StandardCharsets.UTF_8 -> byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte())
+            StandardCharsets.UTF_16BE -> byteArrayOf(0xFE.toByte(), 0xFF.toByte())
+            StandardCharsets.UTF_16LE -> byteArrayOf(0xFF.toByte(), 0xFE.toByte())
+            else -> return
+        }
+        val original = Files.readAllBytes(file)
+        BufferedOutputStream(Files.newOutputStream(file)).use {
+            it.write(bom)
+            it.write(original)
+        }
+    }
 
     @Parcelize
     class Args(val intent: Intent) : ParcelableArgs

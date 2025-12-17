@@ -218,7 +218,7 @@ dependencies {
 
     // https://github.com/Rosemoe/sora-editor
     // Better text editor
-    implementation platform('io.github.rosemoe:editor-bom:0.24.2')
+    implementation platform('io.github.rosemoe:editor-bom:0.24.3')
     implementation 'io.github.rosemoe:editor'
     implementation 'io.github.rosemoe:language-java'
 
