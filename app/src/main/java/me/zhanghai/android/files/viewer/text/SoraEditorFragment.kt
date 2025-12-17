@@ -151,9 +151,8 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                             setLanguageForFile(argsFile.fileName.toString())
                         } else {
                             codeEditor.setEditorLanguage(null)
-                            currentLanguage = null
                         }
-                        item.isChecked = codeEditor.editorLanguage != null
+                        item.isChecked = codeEditor.editorLanguage is JavaLanguage
                         true
                     }
                     R.id.action_undo -> {
