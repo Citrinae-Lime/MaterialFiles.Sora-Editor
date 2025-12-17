@@ -141,12 +141,14 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
     private fun detectAndSetLanguage() {
         val fileName = argsFile.fileName.toString().lowercase()
+        // Note: Currently only JavaLanguage is available from dependencies
+        // This provides basic syntax highlighting for Java-like languages
         val language = when {
             fileName.endsWith(".java") || fileName.endsWith(".kt") || 
             fileName.endsWith(".js") || fileName.endsWith(".ts") ||
             fileName.endsWith(".c") || fileName.endsWith(".cpp") ||
             fileName.endsWith(".h") || fileName.endsWith(".hpp") -> JavaLanguage()
-            else -> null
+            else -> null // Plain text for other file types
         }
         codeEditor.setEditorLanguage(language)
     }
@@ -289,17 +291,30 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         
         // Preserve BOM if it was present in the original file
         val bytes = if (hasBOM && detectedCharset == StandardCharsets.UTF_8) {
-            // Add UTF-8 BOM
-            byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()) + 
-                text.toByteArray(StandardCharsets.UTF_8)
+            // Add UTF-8 BOM using efficient pre-allocation
+            val textBytes = text.toByteArray(StandardCharsets.UTF_8)
+            ByteArray(3 + textBytes.size).apply {
+                this[0] = 0xEF.toByte()
+                this[1] = 0xBB.toByte()
+                this[2] = 0xBF.toByte()
+                System.arraycopy(textBytes, 0, this, 3, textBytes.size)
+            }
         } else if (hasBOM && detectedCharset == StandardCharsets.UTF_16LE) {
-            // Add UTF-16 LE BOM
-            byteArrayOf(0xFF.toByte(), 0xFE.toByte()) + 
-                text.toByteArray(StandardCharsets.UTF_16LE)
+            // Add UTF-16 LE BOM using efficient pre-allocation
+            val textBytes = text.toByteArray(StandardCharsets.UTF_16LE)
+            ByteArray(2 + textBytes.size).apply {
+                this[0] = 0xFF.toByte()
+                this[1] = 0xFE.toByte()
+                System.arraycopy(textBytes, 0, this, 2, textBytes.size)
+            }
         } else if (hasBOM && detectedCharset == StandardCharsets.UTF_16BE) {
-            // Add UTF-16 BE BOM
-            byteArrayOf(0xFE.toByte(), 0xFF.toByte()) + 
-                text.toByteArray(StandardCharsets.UTF_16BE)
+            // Add UTF-16 BE BOM using efficient pre-allocation
+            val textBytes = text.toByteArray(StandardCharsets.UTF_16BE)
+            ByteArray(2 + textBytes.size).apply {
+                this[0] = 0xFE.toByte()
+                this[1] = 0xFF.toByte()
+                System.arraycopy(textBytes, 0, this, 2, textBytes.size)
+            }
         } else {
             // Save with detected charset without BOM
             text.toByteArray(detectedCharset)
@@ -364,19 +379,9 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
             return Pair(StandardCharsets.UTF_16BE, 2)
         }
         
-        // Try to detect UTF-16 without BOM by checking for null bytes pattern
-        if (bytes.size >= 4) {
-            // UTF-16LE typically has null bytes at even positions for ASCII text
-            if (bytes[1] == 0.toByte() && bytes[3] == 0.toByte()) {
-                return Pair(StandardCharsets.UTF_16LE, 0)
-            }
-            // UTF-16BE typically has null bytes at odd positions for ASCII text
-            if (bytes[0] == 0.toByte() && bytes[2] == 0.toByte()) {
-                return Pair(StandardCharsets.UTF_16BE, 0)
-            }
-        }
-        
-        // Default to UTF-8 without BOM
+        // For files without BOM, default to UTF-8
+        // Note: UTF-16 without BOM is ambiguous and requires more sophisticated 
+        // detection. We default to UTF-8 as it's the most common encoding for text files.
         return Pair(StandardCharsets.UTF_8, 0)
     }
 
