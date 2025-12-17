@@ -36,6 +36,7 @@ import me.zhanghai.android.files.util.args
 import me.zhanghai.android.files.util.extraPath
 import me.zhanghai.android.files.util.showToast
 import java.io.IOException
+import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 
 class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
@@ -50,6 +51,8 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
     private var fileContents: String? = null
     private var errorMessage: String? = null
+    private var detectedCharset: Charset = StandardCharsets.UTF_8
+    private var hasBOM: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -93,7 +96,9 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
             activity.supportActionBar!!.setDisplayHomeAsUpEnabled(true)
         }
 
-        codeEditor.setEditorLanguage(JavaLanguage())
+        // Configure editor with improved settings
+        setupEditor()
+        
         codeEditor.colorScheme =
             if (NightModeHelper.isInNightMode(activity)) SchemeDarcula() else EditorColorScheme()
 
@@ -115,6 +120,35 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
             if (NightModeHelper.isInNightMode(activity as AppCompatActivity)) SchemeDarcula() else EditorColorScheme()
         codeEditor.invalidate()
         //TODO: Update toolbar color scheme on dark/light mode toggle
+    }
+
+    private fun setupEditor() {
+        // Enable IME for better input support
+        codeEditor.isEnabled = true
+        
+        // Configure undo/redo with better stack management
+        codeEditor.props.maxUndoStackSize = 100
+        
+        // Enable line numbers
+        codeEditor.isLineNumberEnabled = true
+        
+        // Configure better input handling
+        codeEditor.isWordwrap = false
+        
+        // Set initial language based on file extension
+        detectAndSetLanguage()
+    }
+
+    private fun detectAndSetLanguage() {
+        val fileName = argsFile.fileName.toString().lowercase()
+        val language = when {
+            fileName.endsWith(".java") || fileName.endsWith(".kt") || 
+            fileName.endsWith(".js") || fileName.endsWith(".ts") ||
+            fileName.endsWith(".c") || fileName.endsWith(".cpp") ||
+            fileName.endsWith(".h") || fileName.endsWith(".hpp") -> JavaLanguage()
+            else -> null
+        }
+        codeEditor.setEditorLanguage(language)
     }
 
     private fun setupMenu() {
@@ -151,13 +185,19 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                         true
                     }
                     R.id.action_undo -> {
-                        if (codeEditor.canUndo())
+                        if (codeEditor.canUndo()) {
                             codeEditor.undo()
+                            // Update menu state after undo
+                            requireActivity().invalidateOptionsMenu()
+                        }
                         true
                     }
                     R.id.action_redo -> {
-                        if (codeEditor.canRedo())
+                        if (codeEditor.canRedo()) {
                             codeEditor.redo()
+                            // Update menu state after redo
+                            requireActivity().invalidateOptionsMenu()
+                        }
                         true
                     }
                     R.id.action_reload -> {
@@ -212,7 +252,21 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         binding.errorText.visibility = View.GONE
 
         lifecycleScope.launch(Dispatchers.IO) {
-            fileContents = readFile(argsFile)
+            // Check file size before loading
+            val fileSize = try {
+                Files.size(argsFile)
+            } catch (e: IOException) {
+                -1L
+            }
+            
+            // Limit file size to 5MB to prevent memory issues
+            val maxFileSize = 5 * 1024 * 1024L // 5MB
+            if (fileSize > maxFileSize) {
+                errorMessage = "File too large (${fileSize / 1024 / 1024}MB). Maximum supported size is ${maxFileSize / 1024 / 1024}MB."
+                fileContents = null
+            } else {
+                fileContents = readFile(argsFile)
+            }
 
             launch(Dispatchers.Main) {
                 binding.progress.visibility = View.GONE
@@ -223,6 +277,8 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                 } else {
                     codeEditor.visibility = View.VISIBLE
                     codeEditor.setText(fileContents)
+                    // Update language detection after file is loaded
+                    detectAndSetLanguage()
                 }
             }
         }
@@ -230,7 +286,24 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
     private fun save() {
         val text = codeEditor.text.toString()
-        val bytes = text.toByteArray(StandardCharsets.UTF_8)
+        
+        // Preserve BOM if it was present in the original file
+        val bytes = if (hasBOM && detectedCharset == StandardCharsets.UTF_8) {
+            // Add UTF-8 BOM
+            byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()) + 
+                text.toByteArray(StandardCharsets.UTF_8)
+        } else if (hasBOM && detectedCharset == StandardCharsets.UTF_16LE) {
+            // Add UTF-16 LE BOM
+            byteArrayOf(0xFF.toByte(), 0xFE.toByte()) + 
+                text.toByteArray(StandardCharsets.UTF_16LE)
+        } else if (hasBOM && detectedCharset == StandardCharsets.UTF_16BE) {
+            // Add UTF-16 BE BOM
+            byteArrayOf(0xFE.toByte(), 0xFF.toByte()) + 
+                text.toByteArray(StandardCharsets.UTF_16BE)
+        } else {
+            // Save with detected charset without BOM
+            text.toByteArray(detectedCharset)
+        }
 
         FileJobService.write(argsFile, bytes, requireContext()) { success ->
             if (success) {
@@ -244,12 +317,67 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     private fun readFile(file: Path): String? {
         return try {
             errorMessage = null
-            String(Files.readAllBytes(file))
+            val bytes = Files.readAllBytes(file)
+            
+            // Detect encoding and BOM
+            val (charset, bomSize) = detectCharsetAndBOM(bytes)
+            detectedCharset = charset
+            hasBOM = bomSize > 0
+            
+            // Convert bytes to string, skipping BOM if present
+            String(bytes, bomSize, bytes.size - bomSize, charset)
         } catch (err: Throwable) {
             if (err !is OutOfMemoryError && err !is IOException) throw err
             errorMessage = err.localizedMessage
             null
         }
+    }
+
+    /**
+     * Detect charset and BOM from byte array
+     * Returns pair of (Charset, BOM size in bytes)
+     */
+    private fun detectCharsetAndBOM(bytes: ByteArray): Pair<Charset, Int> {
+        if (bytes.isEmpty()) {
+            return Pair(StandardCharsets.UTF_8, 0)
+        }
+        
+        // Check for UTF-8 BOM (EF BB BF)
+        if (bytes.size >= 3 && 
+            bytes[0] == 0xEF.toByte() && 
+            bytes[1] == 0xBB.toByte() && 
+            bytes[2] == 0xBF.toByte()) {
+            return Pair(StandardCharsets.UTF_8, 3)
+        }
+        
+        // Check for UTF-16 LE BOM (FF FE)
+        if (bytes.size >= 2 && 
+            bytes[0] == 0xFF.toByte() && 
+            bytes[1] == 0xFE.toByte()) {
+            return Pair(StandardCharsets.UTF_16LE, 2)
+        }
+        
+        // Check for UTF-16 BE BOM (FE FF)
+        if (bytes.size >= 2 && 
+            bytes[0] == 0xFE.toByte() && 
+            bytes[1] == 0xFF.toByte()) {
+            return Pair(StandardCharsets.UTF_16BE, 2)
+        }
+        
+        // Try to detect UTF-16 without BOM by checking for null bytes pattern
+        if (bytes.size >= 4) {
+            // UTF-16LE typically has null bytes at even positions for ASCII text
+            if (bytes[1] == 0.toByte() && bytes[3] == 0.toByte()) {
+                return Pair(StandardCharsets.UTF_16LE, 0)
+            }
+            // UTF-16BE typically has null bytes at odd positions for ASCII text
+            if (bytes[0] == 0.toByte() && bytes[2] == 0.toByte()) {
+                return Pair(StandardCharsets.UTF_16BE, 0)
+            }
+        }
+        
+        // Default to UTF-8 without BOM
+        return Pair(StandardCharsets.UTF_8, 0)
     }
 
     private fun textChanged() =
