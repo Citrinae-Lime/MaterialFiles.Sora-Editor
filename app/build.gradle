@@ -51,6 +51,7 @@ android {
         aidl true
         buildConfig true
         viewBinding true
+        resValues true
     }
     androidResources {
         generateLocaleConfig true
