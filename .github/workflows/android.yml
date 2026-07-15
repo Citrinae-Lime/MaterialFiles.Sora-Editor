@@ -51,7 +51,7 @@ jobs:
     - name: Build with Gradle
       run: |
         sed -i "/jcenter()/d" build.gradle
-        sed -i 's/dav4jvm:02fe1a95e6/dav4jvm:02fe1a95e6b86e323bec3784d7d2fe2d4081dde6/g' build.gradle
+        sed -i "s/dav4jvm:02fe1a95e6/dav4jvm:02fe1a95e6b86e323bec3784d7d2fe2d4081dde6/g" build.gradle
         gradle build --stacktrace
 
     - name: Upload artifact
