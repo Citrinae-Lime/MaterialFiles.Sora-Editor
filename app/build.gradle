@@ -15,8 +15,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.google.gms:google-services:4.4.4'
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.6'
+        classpath 'com.google.gms:google-services:4.5.0'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.7'
     }
 }
 apply plugin: 'com.google.gms.google-services'
@@ -123,17 +123,17 @@ dependencies {
 
     // kotlinx-coroutines-android depends on kotlin-stdlib-jdk8
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    def kotlinx_coroutines_version = '1.10.2'
+    def kotlinx_coroutines_version = '1.11.0'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinx_coroutines_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinx_coroutines_version"
 
     implementation 'androidx.activity:activity-ktx:1.13.0'
     implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation 'androidx.core:core-ktx:1.18.0'
+    implementation 'androidx.core:core-ktx:1.19.0'
     implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
     implementation 'androidx.exifinterface:exifinterface:1.4.2'
     implementation 'androidx.fragment:fragment-ktx:1.8.9'
-    def androidx_lifecycle_version = '2.10.0'
+    def androidx_lifecycle_version = '2.11.0'
     implementation "androidx.lifecycle:lifecycle-common-java8:$androidx_lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$androidx_lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-process:$androidx_lifecycle_version"
@@ -142,7 +142,7 @@ dependencies {
     implementation 'androidx.preference:preference-ktx:1.2.1'
     implementation 'androidx.recyclerview:recyclerview:1.4.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0'
-    implementation 'com.google.android.material:material:1.13.0'
+    implementation 'com.google.android.material:material:1.14.0'
 
     implementation 'com.caverock:androidsvg-aar:1.4'
     implementation 'com.davemorrissey.labs:subsampling-scale-image-view-androidx:3.10.0'
@@ -156,7 +156,7 @@ dependencies {
         // org.bouncycastle:bcprov-jdk15to18 instead.
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
     }
-    def bouncy_castle_version = '1.83'
+    def bouncy_castle_version = '1.85'
     implementation "org.bouncycastle:bcprov-jdk15to18:$bouncy_castle_version"
     implementation ('com.hierynomus:sshj:0.40.0') {
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk18on'
@@ -171,7 +171,7 @@ dependencies {
         exclude group: 'com.hierynomus', module: 'smbj'
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk18on'
     }
-    implementation 'com.google.guava:guava:33.5.0-android'
+    implementation 'com.google.guava:guava:33.6.0-android'
     // Guava conflicts with com.google.guava:listenablefuture:1.0 pulled in by AndroidX Core
     implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
     implementation 'com.takisoft.preferencex:preferencex:1.1.0'
@@ -203,19 +203,19 @@ dependencies {
     // This is a dependency of org.apache.ftpserver:ftpserver-core but org.apache.mina:mina-core
     // 2.1.4+ became incompatible before API 24 due to dependency on StandardSocketOptions
     // (DIRMINA-1123) and NetworkChannel.supportedOptions() (DIRMINA-1130).
-    implementation 'org.apache.mina:mina-core:2.2.5'
+    implementation 'org.apache.mina:mina-core:2.2.9'
     // Also a dependency of jCIFS-NG.
     implementation 'org.slf4j:slf4j-android:1.7.36'
 
 //#ifdef NONFREE
-    implementation platform('com.google.firebase:firebase-bom:34.11.0')
+    implementation platform('com.google.firebase:firebase-bom:34.16.0')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-crashlytics-ndk'
 //#endif
 
     // https://github.com/Rosemoe/sora-editor
     // Better text editor
-    implementation platform('io.github.rosemoe:editor-bom:0.24.5')
+    implementation platform('io.github.rosemoe:editor-bom:0.24.6')
     implementation 'io.github.rosemoe:editor'
     implementation 'io.github.rosemoe:language-java'
 
