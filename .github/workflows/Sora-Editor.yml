@@ -48,17 +48,17 @@ jobs:
         gradle-version: current
 
     - name: Build with Gradle
-      run: gradle assembleRelease --parallel
+      run: gradle makeApkFromBundleForRelease --parallel
 
-    - name: Rename artifact
-      working-directory: app/build/outputs/apk/release/
-      run: mv app-release.apk MaterialFiles.Sora-Editor-${{steps.get_tag.outputs.tag}}@${{steps.get_tag.outputs.Short_SHA}}.apk
+    # - name: Rename artifact
+    #   working-directory: app/build/outputs/apk/release/
+    #   run: mv app-release.apk MaterialFiles.Sora-Editor-${{steps.get_tag.outputs.tag}}@${{steps.get_tag.outputs.Short_SHA}}.apk
 
     - name: Upload artifact
       uses: actions/upload-artifact@v7
       with:
         name: MaterialFiles-release ${{steps.get_tag.outputs.tag}}@${{steps.get_tag.outputs.Short_SHA}}
-        path: app/build/outputs/apk/release/
+        path: app/build/
         retention-days: 28
 
     #Todo: Upload to release
