@@ -25,15 +25,16 @@ apply plugin: 'com.google.firebase.crashlytics'
 
 android {
     namespace 'me.zhanghai.android.files'
-    buildToolsVersion = '36.0.0'
-    compileSdk 36
-    ndkVersion '28.1.13356709'
+    buildToolsVersion = '37.0.0'
+    compileSdk = 37
+    compileSdkMinor = 2
+    ndkVersion '30.0.16248370'
     defaultConfig {
         applicationId 'me.zhanghai.android.files'
         minSdk 26
         // Not supporting foreground service timeout yet.
         //noinspection OldTargetApi
-        targetSdk 34
+        targetSdk 36
         versionCode 39
         versionName '1.7.4'
         resValue 'string', 'app_version', versionName + ' (' + versionCode + ')'
@@ -90,8 +91,8 @@ android {
         }
         resources {
             excludes += [
-                    'META-INF/DEPENDENCIES',
-                    'org/bouncycastle/pqc/crypto/picnic/*'
+                    '/DebugProbesKt.bin',
+                    '/META-INF/DEPENDENCIES'
             ]
         }
     }
