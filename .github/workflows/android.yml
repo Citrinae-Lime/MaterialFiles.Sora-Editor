@@ -34,6 +34,8 @@ jobs:
 
     - name: Delete Non-Free Software Code
       run: |
+        # Fix missing com.google.firebase.provider.FirebaseInitProvider
+        curl -sSL "https://github.com/zhanghai/MaterialFiles/commit/c8d13ec6cf00637e6cba89c58048e7e0d02c16af.patch" | git apply -R -
         rm -rf app/src/main/java/me/zhanghai/android/files/nonfree
         find -type f -exec sed -i '/\/\/#ifdef NONFREE/,/\/\/#endif/d' {} +
 

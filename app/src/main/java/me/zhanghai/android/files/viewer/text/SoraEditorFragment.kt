@@ -9,6 +9,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuProvider
 import androidx.core.view.isVisible
@@ -29,6 +30,7 @@ import me.zhanghai.android.files.R
 import me.zhanghai.android.files.databinding.SoraEditorFragmentBinding
 import me.zhanghai.android.files.filejob.FileJobService
 import me.zhanghai.android.files.theme.night.NightModeHelper
+import me.zhanghai.android.files.util.addOnBackPressedCallback
 import me.zhanghai.android.files.util.ParcelableArgs
 import me.zhanghai.android.files.util.args
 import me.zhanghai.android.files.util.extraPath
@@ -43,6 +45,8 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
     private lateinit var binding: SoraEditorFragmentBinding
     private lateinit var codeEditor: CodeEditor
+
+    private lateinit var onBackPressedCallback: OnBackPressedCallback
 
     private var fileContents: String? = null
     private var errorMessage: String? = null
@@ -81,6 +85,13 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
         codeEditor.colorScheme =
             if (NightModeHelper.isInNightMode(activity)) SchemeDarcula() else EditorColorScheme()
 
+        onBackPressedCallback = object : OnBackPressedCallback(false) {
+            override fun handleOnBackPressed() {
+                ConfirmCloseDialogFragment.show(this@SoraEditorFragment)
+            }
+        }
+        addOnBackPressedCallback(onBackPressedCallback)
+
         updateTitle()
         setupMenu()
         reload()
@@ -89,6 +100,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
             run {
                 updateTitle()
                 requireActivity().invalidateOptionsMenu()
+                onBackPressedCallback.isEnabled = textChanged()
             }
         }
     }
@@ -154,13 +166,15 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     }
 
 
-    fun onFinish(): Boolean {
+    fun onSupportNavigateUp(): Boolean {
         if (textChanged()) {
             ConfirmCloseDialogFragment.show(this)
             return true
         }
         return false
     }
+
+    fun onFinish(): Boolean = onSupportNavigateUp()
 
     override fun finish() {
         requireActivity().finish()
@@ -190,6 +204,9 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
     }
 
     override fun reload() {
+        if (::onBackPressedCallback.isInitialized) {
+            onBackPressedCallback.isEnabled = false
+        }
 
         binding.progress.visibility = View.VISIBLE
         binding.codeEditor.visibility = View.GONE
@@ -221,6 +238,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                 fileContents = text
                 showToast(getString(R.string.text_editor_save_success))
                 updateTitle()   //Fix title do not update after save
+                onBackPressedCallback.isEnabled = textChanged()
             }
         }
     }
