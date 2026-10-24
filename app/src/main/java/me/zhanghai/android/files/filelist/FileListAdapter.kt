@@ -155,10 +155,13 @@ class FileListAdapter(
         val lastIndex = (itemCount - 1 downTo firstIndex).firstOrNull { getItem(it) in selectedFiles } ?: return
         if (firstIndex >= lastIndex) return
 
-        val files = (firstIndex..lastIndex)
-            .map(::getItem)
-            .filter(::isFileSelectable)
-            .toCollection(fileItemSetOf())
+        val files = fileItemSetOf()
+        for (index in firstIndex..lastIndex) {
+            getItem(index).let { file ->
+                if (!isFileSelectable(file)) continue
+                files.add(file)
+            }
+        }
         listener.selectFiles(files, true)
     }
 
@@ -199,6 +202,12 @@ class FileListAdapter(
         }
     }
 
+
+    private fun getItemHeight(context: Context, isDense: Boolean): Int =
+        context.resources.getDimensionPixelSize(
+            if (isDense) R.dimen.dense_two_line_list_item_height else R.dimen.two_line_list_item_height
+        )
+
     override fun getItemViewType(position: Int): Int = viewType.ordinal
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -223,13 +232,8 @@ class FileListAdapter(
                     CheckableItemBackground.create(0f, 0f, context)
                 }
                 if (viewType == FileViewType.LIST) {
-                    val heightRes = if (denseLayout) {
-                        R.dimen.dense_two_line_list_item_height
-                    } else {
-                        R.dimen.two_line_list_item_height
-                    }
                     layoutParams = layoutParams.apply {
-                        height = context.resources.getDimensionPixelSize(heightRes)
+                        height = getItemHeight(context, denseLayout)
                     }
                 }
             }
@@ -282,16 +286,13 @@ class FileListAdapter(
                 touchWaiterRunnable = runnable
                 view.postDelayed(runnable, maxWaitMillisSelection)
             }
+            MotionEvent.ACTION_MOVE if _touchData.isGestureHorizontal -> return
+            MotionEvent.ACTION_MOVE if !_touchData.isMultipleSelectionStarted && abs(event.x - _touchData.startTouchPosX) > horizontalError -> {
+                _touchData.isGestureHorizontal = true
+                touchWaiterRunnable?.let { view.removeCallbacks(it) }
+                parentLayout.requestDisallowInterceptTouchEvent(false)
+            }
             MotionEvent.ACTION_MOVE -> {
-                if (_touchData.isGestureHorizontal) return
-                if (!_touchData.isMultipleSelectionStarted) {
-                    if (abs(event.x - _touchData.startTouchPosX) > horizontalError) {
-                        _touchData.isGestureHorizontal = true
-                        touchWaiterRunnable?.let { view.removeCallbacks(it) }
-                        parentLayout.requestDisallowInterceptTouchEvent(false)
-                        return
-                    }
-                }
                 val deltaPos = ((event.y - _touchData.clickedLineAnchorY) / lineHeight).roundToInt()
                 val newPosition = (localPosition + deltaPos).coerceIn(0, itemCount - 1)
                 if (newPosition != _touchData.lastPosSelected) {
@@ -324,18 +325,16 @@ class FileListAdapter(
                 }
                 _touchData.prevDeltaPos = deltaPos
             }
-            MotionEvent.ACTION_UP -> {
+            MotionEvent.ACTION_UP if !_touchData.isMultipleSelectionStarted && TouchData.isClickAction(context, _touchData.startTouchPosX, _touchData.startTouchPosY, event.x, event.y) -> {
                 touchWaiterRunnable?.let { view.removeCallbacks(it) }
                 touchWaiterRunnable = null
-                if (!_touchData.isMultipleSelectionStarted && TouchData.isClickAction(context, _touchData.startTouchPosX, _touchData.startTouchPosY, event.x, event.y)) {
-                    _touchData.isDuringClick = false
-                    view.performClick()
-                }
+                _touchData.isDuringClick = false
+                view.performClick()
                 parentLayout.requestDisallowInterceptTouchEvent(false)
                 _touchData.isMultipleSelectionStarted = false
                 _touchData.isDeltaPosSet = false
             }
-            MotionEvent.ACTION_CANCEL -> {
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 touchWaiterRunnable?.let { view.removeCallbacks(it) }
                 touchWaiterRunnable = null
                 parentLayout.requestDisallowInterceptTouchEvent(false)
