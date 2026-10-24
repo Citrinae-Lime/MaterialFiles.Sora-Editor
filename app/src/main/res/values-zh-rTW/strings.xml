@@ -562,6 +562,11 @@
     <string name="text_editor_encoding">編碼</string>
     <string name="text_editor_close_message">您確定要捨棄對此文件未儲存的變更嗎？</string>
 
+    <string name="word_wrap">自動換行</string>
+    <string name="syntax_highlighting">語法高亮</string>
+    <string name="undo">復原</string>
+    <string name="redo">重做</string>
+
     <string name="ftp_server_title">FTP 伺服器</string>
     <string name="ftp_server_state_title">狀態</string>
     <string name="ftp_server_state_summary_starting">正在啓動…</string>

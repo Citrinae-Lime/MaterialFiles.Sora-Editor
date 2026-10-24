@@ -25,10 +25,10 @@
         app:showAsAction="never" />
 
     <item
-        android:id="@+id/action_word_warp"
+        android:id="@+id/action_word_wrap"
         android:checkable="true"
         android:orderInCategory="100"
-        android:title="@string/word_warp"
+        android:title="@string/word_wrap"
         app:showAsAction="never" />
 
     <item

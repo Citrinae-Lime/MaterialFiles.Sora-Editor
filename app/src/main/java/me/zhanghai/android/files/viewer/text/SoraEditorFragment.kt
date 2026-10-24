@@ -56,6 +56,8 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
     private var isSettingText = false
     private var isTextChanged = false
+    private var canUndo = false
+    private var canRedo = false
     private var isSaving = false
     private var loadJob: Job? = null
 
@@ -116,10 +118,23 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
         codeEditor.subscribeEvent(ContentChangeEvent::class.java) { _, _ ->
             if (isSettingText) return@subscribeEvent
-            if (!isTextChanged) {
-                isTextChanged = true
+            val newCanUndo = codeEditor.canUndo()
+            val newCanRedo = codeEditor.canRedo()
+            val undoRedoChanged = newCanUndo != canUndo || newCanRedo != canRedo
+            canUndo = newCanUndo
+            canRedo = newCanRedo
+
+            val newIsTextChanged = newCanUndo
+            val textChangedStateChanged = newIsTextChanged != isTextChanged
+            isTextChanged = newIsTextChanged
+
+            if (textChangedStateChanged) {
                 updateTitle()
-                onBackPressedCallback.isEnabled = true
+                if (::onBackPressedCallback.isInitialized) {
+                    onBackPressedCallback.isEnabled = isTextChanged
+                }
+            }
+            if (undoRedoChanged || textChangedStateChanged) {
                 requireActivity().invalidateOptionsMenu()
             }
         }
@@ -147,7 +162,7 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
             }
 
             override fun onPrepareMenu(menu: Menu) {
-                menu.findItem(R.id.action_word_warp)?.isChecked = codeEditor.isWordwrap
+                menu.findItem(R.id.action_word_wrap)?.isChecked = codeEditor.isWordwrap
                 menu.findItem(R.id.action_syntax_highlight)?.isChecked =
                     codeEditor.editorLanguage is JavaLanguage
                 menu.findItem(R.id.action_undo)?.isEnabled = codeEditor.canUndo()
@@ -158,11 +173,11 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
             override fun onMenuItemSelected(item: MenuItem): Boolean =
                 when (item.itemId) {
-                    R.id.action_save -> {
+                    R.id.action_save if (fileContents != null && errorMessage == null) -> {
                         save()
                         true
                     }
-                    R.id.action_word_warp -> {
+                    R.id.action_word_wrap -> {
                         codeEditor.isWordwrap = !codeEditor.isWordwrap
                         item.isChecked = codeEditor.isWordwrap
                         true
@@ -174,26 +189,12 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                         item.isChecked = codeEditor.editorLanguage is JavaLanguage
                         true
                     }
-                    R.id.action_undo -> {
-                        if (codeEditor.canUndo()) {
-                            codeEditor.undo()
-                            if (!codeEditor.canUndo()) {
-                                isTextChanged = false
-                                updateTitle()
-                                onBackPressedCallback.isEnabled = false
-                            }
-                            requireActivity().invalidateOptionsMenu()
-                        }
+                    R.id.action_undo if codeEditor.canUndo() -> {
+                        codeEditor.undo()
                         true
                     }
-                    R.id.action_redo -> {
-                        if (codeEditor.canRedo()) {
-                            codeEditor.redo()
-                            isTextChanged = true
-                            updateTitle()
-                            onBackPressedCallback.isEnabled = true
-                            requireActivity().invalidateOptionsMenu()
-                        }
+                    R.id.action_redo if codeEditor.canRedo() -> {
+                        codeEditor.redo()
                         true
                     }
                     R.id.action_reload -> {
@@ -270,6 +271,8 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
                 binding.codeEditor.setText(contents)
                 isSettingText = false
                 isTextChanged = false
+                canUndo = codeEditor.canUndo()
+                canRedo = codeEditor.canRedo()
                 updateTitle()
                 if (::onBackPressedCallback.isInitialized) {
                     onBackPressedCallback.isEnabled = false
