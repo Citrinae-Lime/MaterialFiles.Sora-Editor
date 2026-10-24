@@ -89,6 +89,7 @@ class FileListAdapter(
     private val selectedFiles = fileItemSetOf()
 
     private val _touchData: TouchData = TouchData()
+    private var touchWaiterRunnable: Runnable? = null
 
     private val filePositionMap = mutableMapOf<Path, Int>()
 
@@ -100,12 +101,7 @@ class FileListAdapter(
             notifyItemRangeChanged(0, itemCount, PAYLOAD_STATE_CHANGED)
         }
 
-    private var _denseLayout: Boolean = false
-    var denseLayout: Boolean
-        get() = _denseLayout
-        set(value) {
-            _denseLayout = value
-        }
+    var denseLayout = false
 
     fun replaceSelectedFiles(files: FileItemSet) {
         val changedFiles = fileItemSetOf()
@@ -153,35 +149,16 @@ class FileListAdapter(
     }
 
     fun rangeSelectFiles() {
-        var firstSelectItem = -1
-        var lastSelectItem = -1
-        for (index in 0..<itemCount) {
-            val file = getItem(index)
-            if (file in selectedFiles) {
-                firstSelectItem = index
-                break
-            }
-        }
-        for (index in itemCount - 1 downTo firstSelectItem) {
-            val file = getItem(index)
-            if (file in selectedFiles) {
-                lastSelectItem = index
-                break
-            }
-        }
-        val files = fileItemSetOf()
-        if (firstSelectItem >= 0
-            && lastSelectItem >= 0
-            && lastSelectItem < itemCount
-            && firstSelectItem < lastSelectItem
-        ) {
-            for (index in firstSelectItem..lastSelectItem) {
-                val file = getItem(index)
-                if (isFileSelectable(file)) {
-                    files.add(file)
-                }
-            }
-        }
+        if (selectedFiles.isEmpty() || itemCount == 0 || pickOptions?.allowMultiple == false) return
+
+        val firstIndex = (0..<itemCount).firstOrNull { getItem(it) in selectedFiles } ?: return
+        val lastIndex = (itemCount - 1 downTo firstIndex).firstOrNull { getItem(it) in selectedFiles } ?: return
+        if (firstIndex >= lastIndex) return
+
+        val files = (firstIndex..lastIndex)
+            .map(::getItem)
+            .filter(::isFileSelectable)
+            .toCollection(fileItemSetOf())
         listener.selectFiles(files, true)
     }
 
@@ -245,9 +222,14 @@ class FileListAdapter(
                 } else {
                     CheckableItemBackground.create(0f, 0f, context)
                 }
-                if (viewType == FileViewType.LIST && denseLayout) {
+                if (viewType == FileViewType.LIST) {
+                    val heightRes = if (denseLayout) {
+                        R.dimen.dense_two_line_list_item_height
+                    } else {
+                        R.dimen.two_line_list_item_height
+                    }
                     layoutParams = layoutParams.apply {
-                        height = context.resources.getDimensionPixelSize(R.dimen.dense_two_line_list_item_height)
+                        height = context.resources.getDimensionPixelSize(heightRes)
                     }
                 }
             }
@@ -272,12 +254,14 @@ class FileListAdapter(
     private fun onTouchListener(context: Context, holder: ViewHolder, view: View, event: MotionEvent, file: FileItem) {
         if (_viewType == FileViewType.GRID) return
         val maxWaitMillisSelection = 400L
-        val lineHeight = (view.parent as CheckableForegroundLinearLayout).height
-        val localPosition = holder.absoluteAdapterPosition
+        val parentLayout = view.parent as? CheckableForegroundLinearLayout ?: return
+        val lineHeight = parentLayout.height.takeIf { it > 0 } ?: return
+        val localPosition = holder.bindingAdapterPosition.takeIf { it != RecyclerView.NO_POSITION } ?: return
         val horizontalError = 7.5f
-        when (event.action) {
+
+        when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
-                view.parent.requestDisallowInterceptTouchEvent(true)
+                touchWaiterRunnable?.let { view.removeCallbacks(it) }
                 _touchData.setup(
                     pStartTouchPosX = event.x,
                     pStartTouchPosY = event.y,
@@ -288,24 +272,35 @@ class FileListAdapter(
                     pLastPosSelected = localPosition,
                     pActionIdentifier = event.eventTime,
                 )
-                _touchData.threadedWaiter = Thread {
-                    val id = _touchData.actionIdentifier
-                    SystemClock.sleep(maxWaitMillisSelection)
-                    if (!_touchData.isDuringClick || _touchData.isMultipleSelectionStarted || _touchData.isGestureHorizontal || id != _touchData.actionIdentifier) return@Thread
+                val currentActionId = event.eventTime
+                val runnable = Runnable {
+                    if (!_touchData.isDuringClick || _touchData.isMultipleSelectionStarted || _touchData.isGestureHorizontal || currentActionId != _touchData.actionIdentifier) return@Runnable
                     _touchData.isMultipleSelectionStarted = true
+                    parentLayout.requestDisallowInterceptTouchEvent(true)
                     selectFile(file)
                 }
-                _touchData.threadedWaiter.start()
+                touchWaiterRunnable = runnable
+                view.postDelayed(runnable, maxWaitMillisSelection)
             }
             MotionEvent.ACTION_MOVE -> {
+                if (_touchData.isGestureHorizontal) return
+                if (!_touchData.isMultipleSelectionStarted) {
+                    if (abs(event.x - _touchData.startTouchPosX) > horizontalError) {
+                        _touchData.isGestureHorizontal = true
+                        touchWaiterRunnable?.let { view.removeCallbacks(it) }
+                        parentLayout.requestDisallowInterceptTouchEvent(false)
+                        return
+                    }
+                }
                 val deltaPos = ((event.y - _touchData.clickedLineAnchorY) / lineHeight).roundToInt()
-                val newPosition: Int = localPosition + deltaPos
-                if (newPosition != _touchData.lastPosSelected && !_touchData.isGestureHorizontal) {
+                val newPosition = (localPosition + deltaPos).coerceIn(0, itemCount - 1)
+                if (newPosition != _touchData.lastPosSelected) {
                     if (!_touchData.isMultipleSelectionStarted) {
                         _touchData.isMultipleSelectionStarted = true
+                        touchWaiterRunnable?.let { view.removeCallbacks(it) }
+                        parentLayout.requestDisallowInterceptTouchEvent(true)
                         selectFile(file)
                     }
-                    if (newPosition < 0) return
                     if (!_touchData.isDeltaPosSet) {
                         _touchData.isDeltaPosSet = true
                         _touchData.prevDeltaPos = 0
@@ -313,35 +308,40 @@ class FileListAdapter(
                     }
                     if ((deltaPos > _touchData.prevDeltaPos) != _touchData.isDeltaPosGrowing) {
                         _touchData.isDeltaPosGrowing = !_touchData.isDeltaPosGrowing
-                        selectFile(getItem(_touchData.lastPosSelected))
+                        val pos = _touchData.lastPosSelected.coerceIn(0, itemCount - 1)
+                        selectFile(getItem(pos))
                     }
-                    // Handle fast user input (touch capture may be too slow -- abs(deltaPos) > 1)
                     if (_touchData.isDeltaPosGrowing) {
-                        for (p in _touchData.lastPosSelected+1..newPosition)
-                            selectFile(getItem(p))
+                        for (p in (_touchData.lastPosSelected + 1)..newPosition) {
+                            if (p in 0..<itemCount) selectFile(getItem(p))
+                        }
                     } else {
                         for (p in newPosition..<_touchData.lastPosSelected) {
-                            selectFile(getItem(p))
+                            if (p in 0..<itemCount) selectFile(getItem(p))
                         }
                     }
                     _touchData.lastPosSelected = newPosition
-                } else {
-                    if (_touchData.isMultipleSelectionStarted) return
-                    if (abs(event.x - _touchData.startTouchPosX) > horizontalError) {
-                        _touchData.isGestureHorizontal = true
-                        view.parent.requestDisallowInterceptTouchEvent(false)
-                    }
                 }
                 _touchData.prevDeltaPos = deltaPos
             }
             MotionEvent.ACTION_UP -> {
+                touchWaiterRunnable?.let { view.removeCallbacks(it) }
+                touchWaiterRunnable = null
                 if (!_touchData.isMultipleSelectionStarted && TouchData.isClickAction(context, _touchData.startTouchPosX, _touchData.startTouchPosY, event.x, event.y)) {
                     _touchData.isDuringClick = false
                     view.performClick()
-                    view.parent.requestDisallowInterceptTouchEvent(false)
                 }
+                parentLayout.requestDisallowInterceptTouchEvent(false)
                 _touchData.isMultipleSelectionStarted = false
                 _touchData.isDeltaPosSet = false
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                touchWaiterRunnable?.let { view.removeCallbacks(it) }
+                touchWaiterRunnable = null
+                parentLayout.requestDisallowInterceptTouchEvent(false)
+                _touchData.isMultipleSelectionStarted = false
+                _touchData.isDeltaPosSet = false
+                _touchData.isDuringClick = false
             }
         }
     }
@@ -643,8 +643,6 @@ private data class TouchData(
     var clickedLineAnchorY: Float = 0f,
     var actionIdentifier: Long = 0L
 ) {
-    lateinit var threadedWaiter: Thread
-
     fun setup(pStartTouchPosX: Float,
               pStartTouchPosY: Float,
               pIsDuringClick: Boolean,

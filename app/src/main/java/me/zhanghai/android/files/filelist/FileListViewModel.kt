@@ -169,8 +169,7 @@ class FileListViewModel : ViewModel() {
             }
         }
         if (changed) {
-            // Async setValue for background thread usage: https://stackoverflow.com/questions/53304347/mutablelivedata-cannot-invoke-setvalue-on-a-background-thread-from-coroutine
-            _selectedFilesLiveData.postValue(selectedFiles)
+            _selectedFilesLiveData.value = selectedFiles
         }
     }
 
