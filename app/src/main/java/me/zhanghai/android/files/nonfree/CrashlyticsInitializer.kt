@@ -8,9 +8,7 @@ package me.zhanghai.android.files.nonfree
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.content.pm.Signature
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.GoogleApiAvailability
-import com.google.firebase.FirebaseApp
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import me.zhanghai.android.files.BuildConfig
@@ -18,28 +16,19 @@ import me.zhanghai.android.files.app.application
 import me.zhanghai.android.files.app.packageManager
 import me.zhanghai.android.files.util.getPackageInfoOrNull
 
-object FirebaseInitializer {
+object CrashlyticsInitializer {
     private val HEX_CHARS = "0123456789ABCDEF".toCharArray()
 
     fun initialize() {
         if (BuildConfig.DEBUG) {
             return
         }
-        if (!isGooglePlayServicesAvailable()) {
-            // Prevent "Enable Google Play Services" notifiation when Google Play Services is
-            // disabled by the user.
-            return
-        }
         if (!verifyPackageName() || !verifySignature()) {
             // Please, don't spam.
             return
         }
-        FirebaseApp.initializeApp(application)
+        FirebaseCrashlytics.getInstance().isCrashlyticsCollectionEnabled = true
     }
-
-    private fun isGooglePlayServicesAvailable(): Boolean =
-        GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(application) ==
-            ConnectionResult.SUCCESS
 
     private fun verifyPackageName(): Boolean {
         return application.packageName == "me.zhanghai.android.files"
