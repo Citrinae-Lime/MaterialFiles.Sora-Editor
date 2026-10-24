@@ -165,7 +165,7 @@ dependencies {
     }
     def bouncy_castle_version = '1.86'
     implementation "org.bouncycastle:bcprov-jdk15to18:$bouncy_castle_version"
-    implementation ('com.hierynomus:sshj:0.40.0') {
+    implementation ('com.hierynomus:sshj:0.41.2') {
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk18on'
         exclude group: 'org.bouncycastle', module: 'bcpkix-jdk18on'
     }
@@ -178,7 +178,7 @@ dependencies {
         exclude group: 'com.hierynomus', module: 'smbj'
         exclude group: 'org.bouncycastle', module: 'bcprov-jdk18on'
     }
-    implementation 'com.google.guava:guava:33.7.1-android'
+    implementation 'com.google.guava:guava:33.7.2-android'
     // Guava conflicts with com.google.guava:listenablefuture:1.0 pulled in by AndroidX Core
     implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
     implementation 'com.takisoft.preferencex:preferencex:1.1.0'
@@ -221,7 +221,7 @@ dependencies {
     implementation 'org.slf4j:slf4j-android:1.7.36'
 
 //#ifdef NONFREE
-    implementation platform('com.google.firebase:firebase-bom:34.19.0')
+    implementation platform('com.google.firebase:firebase-bom:35.1.0')
     implementation 'com.google.firebase:firebase-analytics'
     implementation 'com.google.firebase:firebase-crashlytics-ndk'
 //#endif
