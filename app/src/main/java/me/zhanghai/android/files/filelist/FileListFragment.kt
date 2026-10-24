@@ -664,7 +664,7 @@ class FileListFragment : Fragment(), BreadcrumbLayout.Listener, FileListAdapter.
                     persistentDrawerLayout.isDrawerOpen(GravityCompat.START)) {
                     widthDp -= getDimensionDp(R.dimen.navigation_max_width).roundToInt()
                 }
-                (widthDp / 180).coerceAtLeast(if (adapter.denseLayout) 3 else 2 )
+                (widthDp / if (adapter.denseLayout) 120 else 180).coerceAtLeast(2)
             }
         }
     }
@@ -851,9 +851,7 @@ class FileListFragment : Fragment(), BreadcrumbLayout.Listener, FileListAdapter.
     private fun onDenseLayoutChanged(denseLayout: Boolean) {
         adapter.denseLayout = denseLayout
         updateSpanCount()
-        // re-set adapter to prevent RecyclerView from recycling views and reusing old padding
-        // values on refresh. Neither notifyDataSetChanged() / notifyItemRangeChanged
-        // nor adapter.refresh() does work here.
+        binding.recyclerView.recycledViewPool.clear()
         binding.recyclerView.adapter = adapter
     }
 

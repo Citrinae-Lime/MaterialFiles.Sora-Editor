@@ -134,8 +134,9 @@ class SoraEditorFragment : Fragment(), ConfirmReloadDialogFragment.Listener,
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        val activity = requireActivity() as AppCompatActivity
         codeEditor.colorScheme =
-            if (NightModeHelper.isInNightMode(activity as AppCompatActivity)) SchemeDarcula() else EditorColorScheme()
+            if (NightModeHelper.isInNightMode(activity)) SchemeDarcula() else EditorColorScheme()
         codeEditor.invalidate()
     }
 
